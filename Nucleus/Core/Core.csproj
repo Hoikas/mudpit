@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{01BD2A1D-C41D-4EEC-80E9-C75A1D29CC33}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MUd</RootNamespace>
+    <AssemblyName>MUd.Core</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Auth\AuthClient.cs" />
+    <Compile Include="Auth\AuthManifest.cs" />
+    <Compile Include="Auth\AuthMessages.cs" />
+    <Compile Include="Configuration.cs" />
+    <Compile Include="Connection.cs" />
+    <Compile Include="File\FileClient.cs" />
+    <Compile Include="File\FileMessages.cs" />
+    <Compile Include="File\Manifest.cs" />
+    <Compile Include="Lookup\GateClient.cs" />
+    <Compile Include="Lookup\GateMessages.cs" />
+    <Compile Include="LogProcessor.cs" />
+    <Compile Include="Lookup\LookupClient.cs" />
+    <Compile Include="Lookup\LookupMessages.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ShardList.cs" />
+    <Compile Include="Stream\bTEA.cs" />
+    <Compile Include="Stream\CryptoNetStream.cs" />
+    <Compile Include="Stream\EncryptedStream.cs" />
+    <Compile Include="Stream\TokenStream.cs" />
+    <Compile Include="Stream\UruStream.cs" />
+    <Compile Include="Vault\VaultClient.cs" />
+    <Compile Include="Vault\VaultMessages.cs" />
+    <Compile Include="Vault\VaultNode.cs" />
+    <Compile Include="Vault\VaultNodeAccess.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MUd.conf">
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OpenSSL\OpenSSL.csproj">
+      <Project>{8474D033-F77C-4364-A571-0218CDB56575}</Project>
+      <Name>OpenSSL</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Game\" />
+    <Folder Include="Plasma\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
