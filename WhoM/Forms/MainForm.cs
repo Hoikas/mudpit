@@ -66,7 +66,7 @@ namespace MUd {
             fAuthCli.VaultNodeFetched += new AuthVaultNodeFetched(IOnAuthVaultNodeFetched);
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(IOnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(IOnAuthVaultNodeRemoved);
-            fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);
+            fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);        
         }
 
         public VaultNode FetchNode(uint id) {
