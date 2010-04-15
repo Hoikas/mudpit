@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,8 +52,6 @@ namespace MUd {
 
         Dictionary<uint, string> fTransToName = new Dictionary<uint, string>();
         Dictionary<uint, byte[]> fDownloads = new Dictionary<uint, byte[]>();
-
-        Queue<byte[]> fQueuedSends = new Queue<byte[]>();
 
         uint fSrvChallenge;
         public uint Challenge {

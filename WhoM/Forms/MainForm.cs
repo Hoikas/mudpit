@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -66,8 +66,17 @@ namespace MUd {
             fAuthCli.VaultNodeFetched += new AuthVaultNodeFetched(IOnAuthVaultNodeFetched);
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(IOnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(IOnAuthVaultNodeRemoved);
-            fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);        
-        }
+            fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);
+			
+			//Are we running Mono?
+			switch (Environment.OSVersion.Platform) {
+				case PlatformID.MacOSX:
+				case PlatformID.Unix:
+					if (!OpenSSL.OpenSSL.IsDllPresent)
+						MessageBox.Show("OpenSSL is not installed!\r\nPlease run apt-get install libssl-dev or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					break;
+			}
+		}
 
         public VaultNode FetchNode(uint id) {
             if (fNodes.ContainsKey(id)) return fNodes[id];

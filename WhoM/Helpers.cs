@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,7 +28,7 @@ namespace MUd {
             get { return Convert.ToBoolean(BaseKey.GetValue("AutoConnect", false)); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("AutoConnect", value, RegistryValueKind.DWord);
+                key.SetValue("AutoConnect", value);
                 key.Close();
             }
         }
@@ -37,7 +37,7 @@ namespace MUd {
             get { return Convert.ToBoolean(BaseKey.GetValue("BuddyAlert", true)); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("BuddyAlert", value, RegistryValueKind.DWord);
+                key.SetValue("BuddyAlert", value);
                 key.Close();
             }
         }
@@ -46,7 +46,7 @@ namespace MUd {
             get { return Convert.ToUInt32(BaseKey.GetValue("LastAvatar", 0)); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("LastAvatar", value, RegistryValueKind.DWord);
+                key.SetValue("LastAvatar", value);
                 key.Close();
             }
         }
@@ -55,7 +55,7 @@ namespace MUd {
             get { return Convert.ToBoolean(BaseKey.GetValue("NeighborAlert", false)); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("NeighborAlert", value, RegistryValueKind.DWord);
+                key.SetValue("NeighborAlert", value);
                 key.Close();
             }
         }
@@ -73,7 +73,7 @@ namespace MUd {
             get { return BaseKey.GetValue("LastShard", "184.73.198.22").ToString(); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("LastShard", value, RegistryValueKind.String);
+                key.SetValue("LastShard", value);
                 key.Close();
             }
         }
@@ -82,7 +82,7 @@ namespace MUd {
             get { return Convert.ToBoolean(BaseKey.GetValue("RememberLogin", false)); }
             set {
                 RegistryKey key = BaseKey;
-                key.SetValue("RememberLogin", value, RegistryValueKind.DWord);
+                key.SetValue("RememberLogin", value);
                 key.Close();
             }
         }

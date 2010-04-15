@@ -1,11 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
 namespace OpenSSL {
-    internal static class OpenSSL {
+    public static class OpenSSL {
 
         public static bool IsDllPresent {
             get {
@@ -52,7 +52,7 @@ namespace OpenSSL {
         }
 
         #region BigNum
-        public static IntPtr BN_new() {
+        internal static IntPtr BN_new() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_new();
@@ -65,7 +65,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static void BN_free(IntPtr a) {
+        internal static void BN_free(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.BN_free(a);
@@ -79,7 +79,7 @@ namespace OpenSSL {
             }
         }
 
-        public static void BN_clear(IntPtr a) {
+        internal static void BN_clear(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.BN_clear(a);
@@ -93,7 +93,7 @@ namespace OpenSSL {
             }
         }
 
-        public static void BN_clear_free(IntPtr a) {
+        internal static void BN_clear_free(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.BN_clear_free(a);
@@ -107,7 +107,7 @@ namespace OpenSSL {
             }
         }
 
-        public static int BN_num_bits(IntPtr a) {
+        internal static int BN_num_bits(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_num_bits(a);
@@ -120,7 +120,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_add(IntPtr r, IntPtr a, IntPtr b) {
+        internal static int BN_add(IntPtr r, IntPtr a, IntPtr b) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_add(r, a, b);
@@ -133,7 +133,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_sub(IntPtr r, IntPtr a, IntPtr b) {
+        internal static int BN_sub(IntPtr r, IntPtr a, IntPtr b) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_sub(r, a, b);
@@ -146,7 +146,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_mul(IntPtr r, IntPtr a, IntPtr b, IntPtr ctx) {
+        internal static int BN_mul(IntPtr r, IntPtr a, IntPtr b, IntPtr ctx) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_mul(r, a, b, ctx);
@@ -159,7 +159,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_div(IntPtr dv, IntPtr rem, IntPtr a, IntPtr d, IntPtr ctx) {
+        internal static int BN_div(IntPtr dv, IntPtr rem, IntPtr a, IntPtr d, IntPtr ctx) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_div(dv, rem, a, d, ctx);
@@ -173,7 +173,7 @@ namespace OpenSSL {
         }
 
 
-        public static int BN_mod_exp(IntPtr r, IntPtr a, IntPtr p, IntPtr m, IntPtr ctx) {
+        internal static int BN_mod_exp(IntPtr r, IntPtr a, IntPtr p, IntPtr m, IntPtr ctx) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_mod_exp(r, a, p, m, ctx);
@@ -186,7 +186,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_cmp(IntPtr a, IntPtr b) {
+        internal static int BN_cmp(IntPtr a, IntPtr b) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_cmp(a, b);
@@ -199,7 +199,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_rand(IntPtr rnd, int bits, int top, int bottom) {
+        internal static int BN_rand(IntPtr rnd, int bits, int top, int bottom) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_rand(rnd, bits, top, bottom);
@@ -212,7 +212,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static IntPtr BN_generate_prime(IntPtr ret, int bits, int safe, IntPtr add, IntPtr rem, PrimeGenerator cb, IntPtr cb_args) {
+        internal static IntPtr BN_generate_prime(IntPtr ret, int bits, int safe, IntPtr add, IntPtr rem, PrimeGenerator cb, IntPtr cb_args) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_generate_prime(ret, bits, safe, add, rem, cb, cb_args);
@@ -225,7 +225,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static int BN_bn2bin(IntPtr a, byte[] to) {
+        internal static int BN_bn2bin(IntPtr a, byte[] to) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_bn2bin(a, to);
@@ -238,7 +238,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static IntPtr BN_bin2bn(byte[] s, int len, IntPtr ret) {
+        internal static IntPtr BN_bin2bn(byte[] s, int len, IntPtr ret) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_bin2bn(s, len, ret);
@@ -251,7 +251,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static IntPtr BN_bn2hex(IntPtr a) {
+        internal static IntPtr BN_bn2hex(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_bn2hex(a);
@@ -264,7 +264,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static IntPtr BN_bn2dec(IntPtr a) {
+        internal static IntPtr BN_bn2dec(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_bn2dec(a);
@@ -277,7 +277,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static int BN_hex2bn(ref IntPtr a, byte[] str) {
+        internal static int BN_hex2bn(ref IntPtr a, byte[] str) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_hex2bn(ref a, str);
@@ -290,7 +290,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static int BN_dec2bn(ref IntPtr a, byte[] str) {
+        internal static int BN_dec2bn(ref IntPtr a, byte[] str) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_dec2bn(ref a, str);
@@ -305,7 +305,7 @@ namespace OpenSSL {
         #endregion
 
         #region BigNum CTX
-        public static IntPtr BN_CTX_new() {
+        internal static IntPtr BN_CTX_new() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_CTX_new();
@@ -318,7 +318,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static IntPtr BN_CTX_free(IntPtr a) {
+        internal static IntPtr BN_CTX_free(IntPtr a) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.BN_CTX_free(a);
@@ -333,7 +333,7 @@ namespace OpenSSL {
         #endregion
 
         #region ERR
-        public static uint ERR_get_error() {
+        internal static uint ERR_get_error() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.ERR_get_error();
@@ -346,7 +346,7 @@ namespace OpenSSL {
             return 0;
         }
 
-        public static byte[] ERR_get_error_string(uint e, byte[] buf) {
+        internal static byte[] ERR_get_error_string(uint e, byte[] buf) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.ERR_get_error_string(e, buf);
@@ -361,7 +361,7 @@ namespace OpenSSL {
         #endregion
 
         #region RAND
-        public static int RAND_bytes(byte[] buf, int num) {
+        internal static int RAND_bytes(byte[] buf, int num) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.RAND_bytes(buf, num);
@@ -374,7 +374,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static void RAND_cleanup() {
+        internal static void RAND_cleanup() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.RAND_cleanup();
@@ -388,7 +388,7 @@ namespace OpenSSL {
             }
         }
 
-        public static int RAND_load_file(byte[] filename, int max_bytes) {
+        internal static int RAND_load_file(byte[] filename, int max_bytes) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.RAND_load_file(filename, max_bytes);
@@ -401,7 +401,7 @@ namespace OpenSSL {
             return -1;
         }
 
-        public static void RAND_screen() {
+        internal static void RAND_screen() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     throw new PlatformNotSupportedException();
@@ -414,7 +414,7 @@ namespace OpenSSL {
             }
         }
 
-        public static void RAND_seed(byte[] buf, int num) {
+        internal static void RAND_seed(byte[] buf, int num) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.RAND_seed(buf, num);
@@ -430,7 +430,7 @@ namespace OpenSSL {
         #endregion
 
         #region Misc
-        public static void CRYPTO_free(IntPtr p) {
+        internal static void CRYPTO_free(IntPtr p) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.CRYPTO_free(p);
@@ -444,7 +444,7 @@ namespace OpenSSL {
             }
         }
 
-        public static void CRYPTO_malloc_init() {
+        internal static void CRYPTO_malloc_init() {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.CRYPTO_malloc_init();
@@ -460,7 +460,7 @@ namespace OpenSSL {
         #endregion
 
         #region RC4 Encryption
-        public static void RC4_set_key(IntPtr key, int len, byte[] data) {
+        internal static void RC4_set_key(IntPtr key, int len, byte[] data) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.RC4_set_key(key, len, data);
@@ -474,7 +474,7 @@ namespace OpenSSL {
             }
         }
 
-        public static void RC4(IntPtr key, uint len, byte[] indata, byte[] outdata) {
+        internal static void RC4(IntPtr key, uint len, byte[] indata, byte[] outdata) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     ImpUnix.RC4(key, len, indata, outdata);
@@ -490,7 +490,7 @@ namespace OpenSSL {
         #endregion
 
         #region SHA Hashing
-        public static IntPtr SHA(byte[] d, uint n, byte[] md) {
+        internal static IntPtr SHA(byte[] d, uint n, byte[] md) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.SHA(d, n, md);
@@ -503,7 +503,7 @@ namespace OpenSSL {
             return IntPtr.Zero;
         }
 
-        public static IntPtr SHA1(byte[] d, uint n, byte[] md) {
+        internal static IntPtr SHA1(byte[] d, uint n, byte[] md) {
             switch (DllType) {
                 case DLL.LibCRYPTO:
                     return ImpUnix.SHA1(d, n, md);
