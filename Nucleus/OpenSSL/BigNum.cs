@@ -94,9 +94,13 @@ namespace OpenSSL {
         /// <summary>
         /// Compares the values of two BigNums
         /// </summary>
-        /// <param name="cmp">BigNum to compare with</param>
+        /// <param name="obj">BigNum to compare with</param>
         /// <returns>If the two values are equal</returns>
-        public bool Equals(BigNum cmp) {
+        public override bool Equals(object obj) {
+            if (!(obj is BigNum))
+                throw new ArgumentException("obj must be a BigNum to compare");
+            BigNum cmp = obj as BigNum;
+
             //Ensure that the BigNums have not been disposed
             if (fDisposed)
                 throw new ObjectDisposedException("this");

@@ -67,16 +67,16 @@ namespace MUd {
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(IOnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(IOnAuthVaultNodeRemoved);
             fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);
-			
-			//Are we running Mono?
-			switch (Environment.OSVersion.Platform) {
-				case PlatformID.MacOSX:
-				case PlatformID.Unix:
-					if (!OpenSSL.OpenSSL.IsDllPresent)
-						MessageBox.Show("OpenSSL is not installed!\r\nPlease run apt-get install libssl-dev or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					break;
-			}
-		}
+
+            //Are we running Mono?
+            switch (Environment.OSVersion.Platform) {
+                case PlatformID.MacOSX:
+                case PlatformID.Unix:
+                    if (!OpenSSL.OpenSSL.IsDllPresent)
+                        MessageBox.Show("OpenSSL is not installed!\r\nPlease run apt-get install libssl-dev or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+            }
+        }
 
         public VaultNode FetchNode(uint id) {
             if (fNodes.ContainsKey(id)) return fNodes[id];
@@ -437,6 +437,26 @@ namespace MUd {
             ITabSelected(null, new TabControlEventArgs(fTabControl.SelectedTab, fTabControl.SelectedIndex, TabControlAction.Selected));
         }
 
+        private bool IDoNeighborUpdate(VaultPlayerInfoNode node, bool alertShown) {
+            if (fNeighborsCtrl.UpdateNode(node))
+                if (Prefrences.NeighborAlert && !alertShown) {
+                    fNotifyIcon.ShowBalloonTip(10, "Neighbor Login", String.Format("{0} is now exploring D'ni", node.PlayerName), ToolTipIcon.None);
+                    return true;
+                }
+
+            return false;
+        }
+
+        private bool IDoBuddyUpdate(VaultPlayerInfoNode node, bool alertShown) {
+            if (fBuddyCtrl.UpdateNode(node))
+                if (Prefrences.BuddyAlert && !alertShown) {
+                    fNotifyIcon.ShowBalloonTip(10, "Buddy Login", String.Format("{0} is now exploring D'ni", node.PlayerName), ToolTipIcon.None);
+                    return true;
+                }
+
+            return false;
+        }
+
         private void IDownloadNode(uint id) {
             string status = "Downloading Vault Node #" + id.ToString();
             ISetStatus(status);
@@ -447,6 +467,26 @@ namespace MUd {
             lock (fMREs) fMREs.Add(transID, mre);
             mre.WaitOne();
             IHideStatus();
+        }
+
+        private Player IGetPlayer() {
+            if (InvokeRequired) {
+                return Invoke(new Func<Player>(IGetPlayer)) as Player;
+            }
+
+            object obj = fAvatarSelector.Items[fAvatarSelector.SelectedIndex];
+            if (obj is Player) return obj as Player;
+            else return new Player("NULL", 0);
+        }
+
+        private void IHideStatus() {
+            if (InvokeRequired) {
+                BeginInvoke(new MethodInvoker(IHideStatus));
+                return;
+            }
+
+            fProgressLabel.Visible = false;
+            fProgressBar.Visible = false;
         }
 
         private void IKickedByAuth(ENetError reason) {
@@ -485,38 +525,7 @@ namespace MUd {
                 fRecentsCtrl.RemoveNode(node);
         }
 
-        private void IThrowAway() {
-            lock (fVaultTree) {
-                fBaseNodes.Clear();
-                fVaultTree.Clear();
-                fNodes.Clear();
 
-                fBuddyCtrl.Clear();
-                fNeighborsCtrl.Clear();
-                fRecentsCtrl.Clear();
-            }
-        }
-
-        #region Thread Safety Helpers
-        private Player IGetPlayer() {
-            if (InvokeRequired) {
-                return Invoke(new Func<Player>(IGetPlayer)) as Player;
-            }
-
-            object obj = fAvatarSelector.Items[fAvatarSelector.SelectedIndex];
-            if (obj is Player) return obj as Player;
-            else return new Player("NULL", 0);
-        }
-
-        private void IHideStatus() {
-            if (InvokeRequired) {
-                BeginInvoke(new MethodInvoker(IHideStatus));
-                return;
-            }
-
-            fProgressLabel.Visible = false;
-            fProgressBar.Visible = false;
-        }
 
         private void ISetStatus(string text) {
             if (InvokeRequired) {
@@ -538,6 +547,16 @@ namespace MUd {
             MessageBox.Show(this, text, "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
         }
 
+        private void IThrowAway() {
+            fBaseNodes.Clear();
+            fVaultTree.Clear();
+            fNodes.Clear();
+
+            fBuddyCtrl.Clear();
+            fNeighborsCtrl.Clear();
+            fRecentsCtrl.Clear();
+        }
+
         private void IUpdateNode(uint idx) {
             IDownloadNode(idx);
             VaultNode node = fNodes[idx];
@@ -548,26 +567,5 @@ namespace MUd {
                 fRecentsCtrl.UpdateNode(info);
             }
         }
-
-        private bool IDoNeighborUpdate(VaultPlayerInfoNode node, bool alertShown) {
-            if (fNeighborsCtrl.UpdateNode(node))
-                if (Prefrences.NeighborAlert && !alertShown) {
-                    fNotifyIcon.ShowBalloonTip(10, "Neighbor Login", String.Format("{0} is now exploring D'ni", node.PlayerName), ToolTipIcon.None);
-                    return true;
-                }
-
-            return false;
-        }
-
-        private bool IDoBuddyUpdate(VaultPlayerInfoNode node, bool alertShown) {
-            if (fBuddyCtrl.UpdateNode(node))
-                if (Prefrences.BuddyAlert && !alertShown) {
-                    fNotifyIcon.ShowBalloonTip(10, "Buddy Login", String.Format("{0} is now exploring D'ni", node.PlayerName), ToolTipIcon.None);
-                    return true;
-                }
-
-            return false;
-        }
-        #endregion
     }
 }

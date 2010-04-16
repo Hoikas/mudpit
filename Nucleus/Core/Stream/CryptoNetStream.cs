@@ -53,7 +53,6 @@ namespace MUd {
         }
 
         public override int Read(byte[] buffer, int offset, int count) {
-            byte[] temp = new byte[count];
             int size = fSocket.Receive(buffer, offset, count, SocketFlags.None);
             fDecrypt.Transform(buffer, offset, size);
             return size;

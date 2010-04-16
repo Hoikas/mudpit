@@ -99,7 +99,6 @@ namespace MUd {
         protected void Connect(uint buildID, uint branchID, Guid productUUID, EConnType type) {
             fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             fSocket.Connect(fHost, fPort);
-            UruStream s = new UruStream(new NetworkStream(fSocket, false));
 
             fHeader = new ConnectHeader();
             fHeader.fBranchID = branchID;
