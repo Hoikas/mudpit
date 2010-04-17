@@ -58,8 +58,12 @@ namespace MUd {
             get { return fSrvChallenge; }
         }
 
-        public bool Connect(uint buildID, uint branchID, Guid productUUID) {
-            base.Connect(buildID, branchID, productUUID, EConnType.kConnTypeCliToAuth);
+        public AuthClient() : base() { 
+            fHeader.fType = EConnType.kConnTypeCliToAuth; 
+        }
+
+        public override bool Connect() {
+            if (!base.Connect()) return false;
 
             //Send the AuthConnectHeader
             UruStream s = new UruStream(new NetworkStream(fSocket, false));

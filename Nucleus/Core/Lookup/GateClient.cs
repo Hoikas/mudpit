@@ -15,8 +15,12 @@ namespace MUd {
         public event GateIP FileSrvIP;
         public event GatePong Pong;
 
-        public bool Connect(Guid productUUID) {
-            base.Connect(0, 0, productUUID, EConnType.kConnTypeCliToGate);
+        public GateClient() : base() {
+            fHeader.fType = EConnType.kConnTypeCliToGate;
+        }
+
+        public bool Connect() {
+            if (!base.Connect()) return false;
 
             //Send the GateConnectHeader
             UruStream s = new UruStream(new NetworkStream(fSocket, false));
@@ -30,8 +34,6 @@ namespace MUd {
             //Init encryption
             if (!base.NetCliConnect())
                 return false;
-
-            Ping((uint)DateTime.UtcNow.Ticks, Encoding.UTF8.GetBytes("Hello, Mr. GateKeeper!"));
 
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
             return true;

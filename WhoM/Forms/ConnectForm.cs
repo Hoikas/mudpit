@@ -54,6 +54,10 @@ namespace MUd {
             fShardReq = WebRequest.Create("http://mud.hoikas.com/shards.xml");
             fShardReq.BeginGetResponse(new AsyncCallback(IGotShardList), null);
 
+            fAuthCli.ProductID = kUruExplorer;
+            fFileCli.ProductID = kUruExplorer;
+            fGateCli.ProductID = kUruExplorer;
+
             fGateCli.FileSrvIP += new GateIP(IGotFileSrvIP);
             fFileCli.BuildID += new FileBuildIdReply(IGotBuildID);
         }
@@ -70,7 +74,7 @@ namespace MUd {
             fGateCli.Disconnect();
 
             fFileCli.Host = ip;
-            fFileCli.Connect(kUruExplorer);
+            fFileCli.Connect();
             fFileCli.RequestBuildID();
 
             fLog.Debug(String.Format("FileSrv IP: [{0}]", ip));
@@ -176,13 +180,15 @@ namespace MUd {
             fGateCli.Host = OurShard.fGate.fHost;
 
             if (fBuildID == 0) {
-                fGateCli.Connect(kUruExplorer);
+                fGateCli.Connect();
                 fGateCli.GetFileHost(true);
                 fBuildReset.WaitOne(); //Wait on the BuildID
             }
 
             if (!fAuthCli.Connected) {
-                fAuthCli.Connect(fBuildID, 1, kUruExplorer);
+                fAuthCli.BranchID = 1;
+                fAuthCli.BuildID = fBuildID;
+                fAuthCli.Connect();
                 fRegisterReset.WaitOne(); //Wait for the ClientRegister
             }
 

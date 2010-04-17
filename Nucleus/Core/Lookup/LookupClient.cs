@@ -13,8 +13,12 @@ namespace MUd {
 
         public event LookupPong Pong;
 
-        public bool Connect(uint buildID, uint branchID, Guid productUUID, Guid token) {
-            base.Connect(buildID, branchID, productUUID, EConnType.kConnTypeSrvToLookup);
+        public LookupClient() : base() {
+            fHeader.fType = EConnType.kConnTypeSrvToLookup;
+        }
+
+        public bool Connect(Guid token) {
+            if (!base.Connect()) return false;
 
             //Send the LookupConnectHeader
             UruStream s = new UruStream(new NetworkStream(fSocket, false));

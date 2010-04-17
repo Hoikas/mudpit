@@ -13,8 +13,12 @@ namespace MUd {
 
         public event FileBuildIdReply BuildID;
 
-        public bool Connect(Guid productUUID) {
-            base.Connect(0, 0, productUUID, EConnType.kConnTypeCliToFile);
+        public FileClient() : base() {
+            fHeader.fType = EConnType.kConnTypeCliToFile;
+        }
+
+        public override bool Connect() {
+            if (!base.Connect()) return false;
 
             //Send the FileConnectHeader
             UruStream s = new UruStream(new NetworkStream(fSocket, false));

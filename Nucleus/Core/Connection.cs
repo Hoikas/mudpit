@@ -95,18 +95,32 @@ namespace MUd {
             set { fX = value; }
         }
 
+        public uint BranchID {
+            get { return fHeader.fBranchID; }
+            set { fHeader.fBranchID = value; }
+        }
+
+        public uint BuildID {
+            get { return fHeader.fBuildID; }
+            set { fHeader.fBuildID = value; }
+        }
+
+        public Guid ProductID {
+            get { return fHeader.fProductID; }
+            set { fHeader.fProductID = value; }
+        }
+
+        protected Cli2SrvBase() {
+            fHeader = new ConnectHeader();
+            fHeader.fBuildType = 50;
+            fHeader.fSockHeaderSize = 31;
+        }
+
         #region Connect
-        protected void Connect(uint buildID, uint branchID, Guid productUUID, EConnType type) {
+        public virtual bool Connect() {
             fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             fSocket.Connect(fHost, fPort);
-
-            fHeader = new ConnectHeader();
-            fHeader.fBranchID = branchID;
-            fHeader.fBuildID = buildID;
-            fHeader.fBuildType = 50;
-            fHeader.fProductID = productUUID;
-            fHeader.fSockHeaderSize = 31;
-            fHeader.fType = type;
+            return true;
         }
 
         protected bool NetCliConnect() {
