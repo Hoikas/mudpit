@@ -83,6 +83,7 @@ namespace MUd {
                     switch (msg) {
                         case GameSrv2Cli.JoinAgeReply:
                             IJoinAgeReply();
+                            break;
                         default:
                             string test = Enum.GetName(typeof(GameSrv2Cli), msg);
                             throw new NotSupportedException(msg.ToString("X") + " - " + test);
