@@ -71,7 +71,7 @@ namespace MUd {
                 case PlatformID.MacOSX:
                 case PlatformID.Unix:
                     if (!OpenSSL.OpenSSL.IsDllPresent)
-                        MessageBox.Show("OpenSSL is not installed!\r\nPlease run apt-get install libssl-dev or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("OpenSSL is not installed!\r\nPlease run \"apt-get install libssl-dev\" or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     break;
             }
         }
