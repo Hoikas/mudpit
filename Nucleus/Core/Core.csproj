@@ -55,6 +55,8 @@
     <Compile Include="File\FileClient.cs" />
     <Compile Include="File\FileMessages.cs" />
     <Compile Include="File\Manifest.cs" />
+    <Compile Include="Game\GameClient.cs" />
+    <Compile Include="Game\GameMessages.cs" />
     <Compile Include="Lookup\GateClient.cs" />
     <Compile Include="Lookup\GateMessages.cs" />
     <Compile Include="LogProcessor.cs" />
@@ -73,17 +75,12 @@
     <Compile Include="Vault\VaultNodeAccess.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="MUd.conf">
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\OpenSSL\OpenSSL.csproj">
       <Project>{8474D033-F77C-4364-A571-0218CDB56575}</Project>
       <Name>OpenSSL</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Game\" />
     <Folder Include="Plasma\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

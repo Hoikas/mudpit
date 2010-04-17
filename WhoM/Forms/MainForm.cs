@@ -41,9 +41,7 @@ namespace MUd {
         }
 
         public MainForm() {
-#if DEBUG
-            fLog.LogLevel = ELogType.kLogDebug;
-#else
+#if !DEBUG
             if (!System.IO.File.Exists("MUd.conf"))
                 fLog.LogLevel = ELogType.kLogWarning;
 #endif
