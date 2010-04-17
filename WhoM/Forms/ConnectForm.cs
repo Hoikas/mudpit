@@ -58,8 +58,8 @@ namespace MUd {
             fFileCli.ProductID = kUruExplorer;
             fGateCli.ProductID = kUruExplorer;
 
-            fGateCli.FileSrvIP += new GateIP(IGotFileSrvIP);
-            fFileCli.BuildID += new FileBuildIdReply(IGotBuildID);
+            fGateCli.GotFileSrvIP += new GateIP(IGotFileSrvIP);
+            fFileCli.GotBuildID += new FileBuildIdReply(IGotBuildID);
         }
 
         private void IGotBuildID(uint transID, ENetError result, uint buildID) {

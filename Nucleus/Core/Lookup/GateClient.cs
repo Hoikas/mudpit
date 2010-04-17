@@ -12,14 +12,14 @@ namespace MUd {
 
     public class GateClient : Cli2SrvBase {
 
-        public event GateIP FileSrvIP;
+        public event GateIP GotFileSrvIP;
         public event GatePong Pong;
 
         public GateClient() : base() {
             fHeader.fType = EConnType.kConnTypeCliToGate;
         }
 
-        public bool Connect() {
+        public override bool Connect() {
             if (!base.Connect()) return false;
 
             //Send the GateConnectHeader
@@ -97,8 +97,8 @@ namespace MUd {
         private void IGotFileIP() {
             Gate_FileSrvReply reply = new Gate_FileSrvReply();
             reply.Read(fStream);
-            if (FileSrvIP != null)
-                FileSrvIP(reply.fTransID, reply.fHost);
+            if (GotFileSrvIP != null)
+                GotFileSrvIP(reply.fTransID, reply.fHost);
         }
 
         private void IPong() {

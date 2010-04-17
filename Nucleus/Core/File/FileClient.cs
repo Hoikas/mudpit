@@ -11,7 +11,7 @@ namespace MUd {
 
     public class FileClient : Cli2SrvBase {
 
-        public event FileBuildIdReply BuildID;
+        public event FileBuildIdReply GotBuildID;
 
         public FileClient() : base() {
             fHeader.fType = EConnType.kConnTypeCliToFile;
@@ -92,7 +92,7 @@ namespace MUd {
             File_BuildIdReply reply = new File_BuildIdReply();
             reply.Read(fStream);
             if (BuildID != null)
-                BuildID(reply.fTransID, reply.fResult, reply.fBuildID);
+                GotBuildID(reply.fTransID, reply.fResult, reply.fBuildID);
         }
     }
 }
