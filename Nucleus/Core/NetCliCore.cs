@@ -74,6 +74,17 @@ namespace MUd {
         public uint fPopulation;
         public uint fCurrPopulation;
 
+        public override bool Equals(object obj) {
+            if (!(obj is NetAgeInfo)) 
+                return false;
+
+            NetAgeInfo cmp = (NetAgeInfo)obj;
+            if (fFilename.Equals(cmp.fFilename))
+                if (fInstanceUuid.Equals(cmp.fInstanceUuid))
+                    return true;
+            return false;
+        }
+
         public void Read(UruStream s) {
             fInstanceUuid = new Guid(s.ReadBytes(16));
             fFilename = s.ReadUnicodeStringF(64);

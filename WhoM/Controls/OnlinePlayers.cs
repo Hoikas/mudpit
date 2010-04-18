@@ -25,7 +25,6 @@ namespace MUd {
         private Dictionary<uint, uint> fPlayerToInfo = new Dictionary<uint, uint>();
         private bool fInitialized = false;
         private uint fBaseNode;
-        private Thread fWorker;
 
         public OnlinePlayers() {
             InitializeComponent();
@@ -43,10 +42,6 @@ namespace MUd {
         }
 
         public void Clear() {
-            if (fWorker != null) 
-                if (fWorker.IsAlive) 
-                    fWorker.Abort();
-
             fPlayerToInfo.Clear();
             fDataGridView.Rows.Clear();
             fInitialized = false;

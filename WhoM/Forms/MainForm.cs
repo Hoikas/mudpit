@@ -48,6 +48,7 @@ namespace MUd {
             InitializeComponent();
 
             fBuddyCtrl.Parent = this;
+            fPublicAgesCtrl.Parent = this;
             fNeighborsCtrl.CanRemove = false; //NO!!!!!!!!!!!!!!!!!
             fNeighborsCtrl.Parent = this;
             fRecentsCtrl.Parent = this;
@@ -132,6 +133,9 @@ namespace MUd {
         }
 
         private void IOnAuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages) {
+            //Fire callback
+            // - Method: ISomething(NetAgeInfo[] ages, ...)
+            IFireTransCallback(transID, new object[] { ages });
         }
 
         private void IOnAuthKickedOff(ENetError reason) {
@@ -364,6 +368,10 @@ namespace MUd {
             if (tag == "neighbors")
                 if (fBaseNodes.ContainsKey(EStandardNode.kHoodMembersFolder))
                     fNeighborsCtrl.SetFolder(fBaseNodes[EStandardNode.kHoodMembersFolder]);
+
+            if (tag == "publicages")
+                if (fAuthCli.Connected) //Don't fail ;)
+                    fPublicAgesCtrl.RefreshAgeList();
 
             if (tag == "recents")
                 if (fBaseNodes.ContainsKey(EStandardNode.kPeopleIKnowAboutFolder))

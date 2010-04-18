@@ -96,6 +96,9 @@
       <DependentUpon>OnlinePlayers.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Controls\PublicAgesControl.resx">
+      <DependentUpon>PublicAgesControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\AboutBox.resx">
       <DependentUpon>AboutBox.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -146,6 +149,12 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Controls\PublicAgesControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\PublicAgesControl.Designer.cs">
+      <DependentUpon>PublicAgesControl.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nucleus\Core\Core.csproj">
@@ -161,6 +170,7 @@
     <Content Include="book.ico" />
     <Content Include="Resources\bullet_green.png" />
     <Content Include="Resources\bullet_red.png" />
+    <Content Include="Resources\view-refresh.png" />
     <None Include="Resources\chatmsg.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
