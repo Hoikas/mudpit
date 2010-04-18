@@ -152,6 +152,16 @@ namespace MUd {
             fWriter.Write(data);
         }
 
+        public void WriteUnicodeStringF(string data, int size) {
+            if (data.Length > size)
+                data = data.Remove(size - 1);
+
+            fWriter.Write(Encoding.Unicode.GetBytes(data));
+            if (data.Length < size)
+                for (int i = 0; i < (size - data.Length); i++)
+                    fWriter.Write((ushort)0);
+        }
+
         public void WriteUnicodeStringV16(string data, int maxsize) {
             if (data == null || data == String.Empty) {
                 fWriter.Write((short)0);

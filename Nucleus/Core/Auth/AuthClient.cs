@@ -14,6 +14,7 @@ namespace MUd {
     public delegate void AuthClientRegistered(uint challenge);
     public delegate void AuthFileDownloaded(uint transID, string name, byte[] data);
     public delegate void AuthFileList(uint transID, ENetError result, byte[] data);
+    public delegate void AuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages);
     public delegate void AuthKickedOff(ENetError reason);
     public delegate void AuthLoggedIn(uint transID, ENetError result, uint flags, uint[] droidKey, uint billing, Guid acctUuid);
     public delegate void AuthPlayerInfo(uint transID, string name, uint idx, string shape, uint explorer);
@@ -34,6 +35,7 @@ namespace MUd {
         public event AuthFileDownloaded FileDownloaded;
         public event AuthFileList FileList;
         public event AuthAgeReply GotAge;
+        public event AuthGotPublicAges GotPublicAges;
         public event AuthKickedOff KickedOff;
         public event AuthLoggedIn LoggedIn;
         public event AuthPlayerInfo PlayerInfo;
@@ -165,6 +167,21 @@ namespace MUd {
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeFind);
+                req.Write(fStream);
+                fStream.FlushWriter();
+            }
+
+            return req.fTransID;
+        }
+
+        public uint GetPublicAges(string filename) {
+            Auth_GetPublicAges req = new Auth_GetPublicAges();
+            req.fFilename = filename;
+            req.fTransID = IGetTransID();
+
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)AuthCli2Srv.GetPublicAgeList);
                 req.Write(fStream);
                 fStream.FlushWriter();
             }
@@ -324,6 +341,9 @@ namespace MUd {
                         case AuthSrv2Cli.PingReply:
                             IPong();
                             break;
+                        case AuthSrv2Cli.PublicAgeList:
+                            IPublicAgeList();
+                            break;
                         case AuthSrv2Cli.ServerAddr:
                             IServerAddr();
                             break;
@@ -459,6 +479,13 @@ namespace MUd {
             reply.Read(fStream);
             if (Pong != null)
                 Pong(reply.fTransID, reply.fPingTime, reply.fPayload);
+        }
+
+        private void IPublicAgeList() {
+            Auth_GotPublicAges reply = new Auth_GotPublicAges();
+            reply.Read(fStream);
+            if (GotPublicAges != null)
+                GotPublicAges(reply.fTransID, reply.fResult, reply.fAges);
         }
 
         private void IServerAddr() {

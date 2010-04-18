@@ -224,6 +224,45 @@ namespace MUd {
         }
     }
 
+    public struct Auth_GetPublicAges {
+        public uint fTransID;
+        public string fFilename; //Len 64
+
+        public void Read(UruStream s) {
+            fTransID = s.ReadUInt();
+            fFilename = s.ReadUnicodeStringV16(64);
+        }
+
+        public void Write(UruStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUnicodeStringV16(fFilename, 64);
+        }
+    }
+
+    public struct Auth_GotPublicAges {
+        public uint fTransID;
+        public ENetError fResult;
+        public NetAgeInfo[] fAges;
+
+        public void Read(UruStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fAges = new NetAgeInfo[s.ReadInt()];
+            for (int i = 0; i < fAges.Length; i++) {
+                fAges[i] = new NetAgeInfo();
+                fAges[i].Read(s);
+            }
+        }
+
+        public void Write(UruStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            s.WriteInt(fAges.Length);
+            foreach (NetAgeInfo nai in fAges)
+                nai.Write(s);
+        }
+    }
+
     public struct Auth_InitAgeReply {
         public uint fTransID;
         public ENetError fResult;

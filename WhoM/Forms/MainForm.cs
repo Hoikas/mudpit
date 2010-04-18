@@ -55,6 +55,7 @@ namespace MUd {
 #if !DEBUG
             fAuthCli.ExceptionHandler += new ExceptionArgs(IOnAuthException);
 #endif
+            fAuthCli.GotPublicAges += new AuthGotPublicAges(IOnAuthGotPublicAges);
             fAuthCli.KickedOff += new AuthKickedOff(IOnAuthKickedOff);
             fAuthCli.PlayerInfo += new AuthPlayerInfo(IOnAuthPlayerInfo);
             fAuthCli.PlayerSet += new AuthResult(IOnAuthPlayerSet);
@@ -128,6 +129,9 @@ namespace MUd {
         #region Auth Client Message Callbacks
         private void IOnAuthException(Exception e) {
             Invoke(new Action<object, ThreadExceptionEventArgs>(Application_ThreadException), new object[] { null, new ThreadExceptionEventArgs(e) });
+        }
+
+        private void IOnAuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages) {
         }
 
         private void IOnAuthKickedOff(ENetError reason) {

@@ -73,5 +73,11 @@ namespace MUd.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        internal static System.IO.UnmanagedMemoryStream chatmsg {
+            get {
+                return ResourceManager.GetStream("chatmsg", resourceCulture);
+            }
+        }
     }
 }

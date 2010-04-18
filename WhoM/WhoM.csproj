@@ -161,6 +161,7 @@
     <Content Include="book.ico" />
     <Content Include="Resources\bullet_green.png" />
     <Content Include="Resources\bullet_red.png" />
+    <None Include="Resources\chatmsg.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
