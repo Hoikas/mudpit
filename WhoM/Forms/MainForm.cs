@@ -118,7 +118,7 @@ namespace MUd {
             if (fCallbacks.ContainsKey(transID)) {
                 Callback c = fCallbacks[transID];
                 fCallbacks.Remove(transID); //Delete it
-                
+
                 object[] debug = ICreateArgArray(c, args);
                 BeginInvoke(c.fFunc, debug);
             }
@@ -127,26 +127,18 @@ namespace MUd {
 
         #region Auth Client Message Callbacks
         private void IOnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
-            if (result != ENetError.kNetSuccess) {
-                IHideStatus();
-                IShowError("Unhandled Error Code: " + result.ToString().Substring(4));
-                return;
-            }
+            foreach (VaultNodeRef nRef in refs) {
+                if (!fVaultTree.ContainsKey(nRef.fParentIdx))
+                    fVaultTree.Add(nRef.fParentIdx, new List<uint>());
+                if (!fVaultTree[nRef.fParentIdx].Contains(nRef.fChildIdx)) {
+                    fLog.Debug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
+                    fVaultTree[nRef.fParentIdx].Add(nRef.fChildIdx);
+                }
 
-            lock (fVaultTree) {
-                foreach (VaultNodeRef nRef in refs) {
-                    if (!fVaultTree.ContainsKey(nRef.fParentIdx))
-                        fVaultTree.Add(nRef.fParentIdx, new List<uint>());
-                    if (!fVaultTree[nRef.fParentIdx].Contains(nRef.fChildIdx)) {
-                        fLog.Debug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
-                        fVaultTree[nRef.fParentIdx].Add(nRef.fChildIdx);
-                    }
-
-                    //Is this a "core node" ?
-                    if (nRef.fParentIdx == fActivePlayer) {
-                        uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
-                        fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
-                    }
+                //Is this a "core node" ?
+                if (nRef.fParentIdx == fActivePlayer) {
+                    uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
+                    fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
                 }
             }
         }
@@ -167,12 +159,6 @@ namespace MUd {
         }
 
         private void IOnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
-            if (result != ENetError.kNetSuccess) {
-                IHideStatus();
-                IShowError("Unhandled Error Code: " + result.ToString().Substring(4));
-                return;
-            }
-
             VaultNode node = VaultNode.Parse(data);
             if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
             else fNodes.Add(node.ID, node);
@@ -202,16 +188,13 @@ namespace MUd {
             fLog.Info(String.Format("Player Set [RESULT: {0}]", result.ToString().Substring(4)));
             switch (result) {
                 case ENetError.kNetErrPlayerNotFound:
-                    IHideStatus();
                     IShowError("Selected player not found!");
                     break;
                 case ENetError.kNetSuccess:
-                    ISetStatus("Downloading Player Tree");
                     fActivePlayer = IGetPlayer().fID;
                     fAuthCli.FetchVaultTree(fActivePlayer);
                     break;
                 default:
-                    IHideStatus();
                     IShowError("Unhandled Error Code: " + result.ToString().Substring(4));
                     break;
             }
@@ -312,10 +295,10 @@ namespace MUd {
 
             //Do the search
             uint trans = fAuthCli.FindVaultNode(search.BaseNode.ToArray());
-            fCallbacks.Add(trans, new Callback(new Action<uint[], uint>(IAddBuddyCB), new object[] { obj }));
+            fCallbacks.Add(trans, new Callback(new Action<uint[], uint>(IAddBuddy), new object[] { obj }));
         }
 
-        private void IAddBuddyCB(uint[] nodeIDs, uint buddy) {
+        private void IAddBuddy(uint[] nodeIDs, uint buddy) {
             if (nodeIDs.Length == 0) {
                 MessageBox.Show(this, String.Format("KI #{0} is not on the lattice", buddy), "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 fLog.Error(String.Format("Attempted to add buddy {0}, but he does not exist!", buddy));
@@ -336,7 +319,6 @@ namespace MUd {
 
             if (p.ToString() == "NULL") return;
             fLog.Info(String.Format("Set Active Player [ID: {0}] [NAME: {1}]", p.fID.ToString(), p.fName));
-            ISetStatus("Setting Active Player");
             fAuthCli.SetActivePlayer(p.fID);
             Prefrences.LastAvatar = p.fID;
         }
@@ -480,16 +462,6 @@ namespace MUd {
             else return new Player("NULL", 0);
         }
 
-        private void IHideStatus() {
-            if (InvokeRequired) {
-                BeginInvoke(new MethodInvoker(IHideStatus));
-                return;
-            }
-
-            fProgressLabel.Visible = false;
-            fProgressBar.Visible = false;
-        }
-
         private void IKickedByAuth(ENetError reason) {
             //Get the enum name of the reason
             string temp = reason.ToString().Substring(4);
@@ -528,17 +500,6 @@ namespace MUd {
                 fNeighborsCtrl.RemoveNode(node);
             if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
                 fRecentsCtrl.RemoveNode(node);
-        }
-
-        private void ISetStatus(string text) {
-            if (InvokeRequired) {
-                BeginInvoke(new Action<string>(ISetStatus), new object[] { text });
-                return;
-            }
-
-            fProgressLabel.Text = text;
-            fProgressLabel.Visible = true;
-            fProgressBar.Visible = true;
         }
 
         private void IShowError(string text) {

@@ -41,24 +41,21 @@
             this.fAboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fTabControl = new System.Windows.Forms.TabControl();
             this.fBuddiesTab = new System.Windows.Forms.TabPage();
-            this.fNeighborsPage = new System.Windows.Forms.TabPage();
-            this.fRecentsPage = new System.Windows.Forms.TabPage();
-            this.fAvatarSelector = new System.Windows.Forms.ComboBox();
-            this.fAvatarLabel = new System.Windows.Forms.Label();
-            this.fStatusStrip = new System.Windows.Forms.StatusStrip();
-            this.fProgressBar = new System.Windows.Forms.ToolStripProgressBar();
-            this.fProgressLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.fNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.fAddBuddy = new MUd.AddPlayer();
             this.fBuddyCtrl = new MUd.OnlinePlayers();
+            this.fNeighborsPage = new System.Windows.Forms.TabPage();
             this.fNeighborsCtrl = new MUd.OnlinePlayers();
+            this.fRecentsPage = new System.Windows.Forms.TabPage();
             this.fRecentsCtrl = new MUd.OnlinePlayers();
+            this.fAvatarSelector = new System.Windows.Forms.ComboBox();
+            this.fAvatarLabel = new System.Windows.Forms.Label();
+            this.fNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.fStatusStrip = new System.Windows.Forms.StatusStrip();
             this.fMainMenu.SuspendLayout();
             this.fTabControl.SuspendLayout();
             this.fBuddiesTab.SuspendLayout();
             this.fNeighborsPage.SuspendLayout();
             this.fRecentsPage.SuspendLayout();
-            this.fStatusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // fMainMenu
@@ -196,7 +193,7 @@
             this.fTabControl.Location = new System.Drawing.Point(0, 55);
             this.fTabControl.Name = "fTabControl";
             this.fTabControl.SelectedIndex = 0;
-            this.fTabControl.Size = new System.Drawing.Size(450, 494);
+            this.fTabControl.Size = new System.Drawing.Size(454, 494);
             this.fTabControl.TabIndex = 1;
             this.fTabControl.Tag = "";
             this.fTabControl.Selected += new System.Windows.Forms.TabControlEventHandler(this.ITabSelected);
@@ -208,11 +205,31 @@
             this.fBuddiesTab.Location = new System.Drawing.Point(4, 22);
             this.fBuddiesTab.Name = "fBuddiesTab";
             this.fBuddiesTab.Padding = new System.Windows.Forms.Padding(3);
-            this.fBuddiesTab.Size = new System.Drawing.Size(442, 468);
+            this.fBuddiesTab.Size = new System.Drawing.Size(446, 468);
             this.fBuddiesTab.TabIndex = 0;
             this.fBuddiesTab.Tag = "buddies";
             this.fBuddiesTab.Text = "Buddies List";
             this.fBuddiesTab.UseVisualStyleBackColor = true;
+            // 
+            // fAddBuddy
+            // 
+            this.fAddBuddy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.fAddBuddy.Label = "Add New Buddy";
+            this.fAddBuddy.Location = new System.Drawing.Point(200, 440);
+            this.fAddBuddy.Name = "fAddBuddy";
+            this.fAddBuddy.Size = new System.Drawing.Size(240, 25);
+            this.fAddBuddy.TabIndex = 1;
+            this.fAddBuddy.Add += new System.Action<uint>(this.IAddBuddy);
+            // 
+            // fBuddyCtrl
+            // 
+            this.fBuddyCtrl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.fBuddyCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fBuddyCtrl.Name = "fBuddyCtrl";
+            this.fBuddyCtrl.Size = new System.Drawing.Size(440, 431);
+            this.fBuddyCtrl.TabIndex = 0;
             // 
             // fNeighborsPage
             // 
@@ -220,11 +237,19 @@
             this.fNeighborsPage.Location = new System.Drawing.Point(4, 22);
             this.fNeighborsPage.Name = "fNeighborsPage";
             this.fNeighborsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.fNeighborsPage.Size = new System.Drawing.Size(442, 468);
+            this.fNeighborsPage.Size = new System.Drawing.Size(446, 491);
             this.fNeighborsPage.TabIndex = 1;
             this.fNeighborsPage.Tag = "neighbors";
             this.fNeighborsPage.Text = "Neighbors";
             this.fNeighborsPage.UseVisualStyleBackColor = true;
+            // 
+            // fNeighborsCtrl
+            // 
+            this.fNeighborsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fNeighborsCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fNeighborsCtrl.Name = "fNeighborsCtrl";
+            this.fNeighborsCtrl.Size = new System.Drawing.Size(440, 485);
+            this.fNeighborsCtrl.TabIndex = 0;
             // 
             // fRecentsPage
             // 
@@ -232,11 +257,19 @@
             this.fRecentsPage.Location = new System.Drawing.Point(4, 22);
             this.fRecentsPage.Name = "fRecentsPage";
             this.fRecentsPage.Padding = new System.Windows.Forms.Padding(3);
-            this.fRecentsPage.Size = new System.Drawing.Size(442, 468);
+            this.fRecentsPage.Size = new System.Drawing.Size(446, 491);
             this.fRecentsPage.TabIndex = 2;
             this.fRecentsPage.Tag = "recents";
             this.fRecentsPage.Text = "Recent List";
             this.fRecentsPage.UseVisualStyleBackColor = true;
+            // 
+            // fRecentsCtrl
+            // 
+            this.fRecentsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.fRecentsCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fRecentsCtrl.Name = "fRecentsCtrl";
+            this.fRecentsCtrl.Size = new System.Drawing.Size(440, 485);
+            this.fRecentsCtrl.TabIndex = 0;
             // 
             // fAvatarSelector
             // 
@@ -259,31 +292,6 @@
             this.fAvatarLabel.TabIndex = 3;
             this.fAvatarLabel.Text = "Avatars Available";
             // 
-            // fStatusStrip
-            // 
-            this.fStatusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fProgressBar,
-            this.fProgressLabel});
-            this.fStatusStrip.Location = new System.Drawing.Point(0, 552);
-            this.fStatusStrip.Name = "fStatusStrip";
-            this.fStatusStrip.Size = new System.Drawing.Size(454, 22);
-            this.fStatusStrip.TabIndex = 4;
-            this.fStatusStrip.Text = "statusStrip1";
-            // 
-            // fProgressBar
-            // 
-            this.fProgressBar.Name = "fProgressBar";
-            this.fProgressBar.Size = new System.Drawing.Size(100, 16);
-            this.fProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
-            this.fProgressBar.Visible = false;
-            // 
-            // fProgressLabel
-            // 
-            this.fProgressLabel.Name = "fProgressLabel";
-            this.fProgressLabel.Size = new System.Drawing.Size(139, 17);
-            this.fProgressLabel.Text = "Downloading Player Tree";
-            this.fProgressLabel.Visible = false;
-            // 
             // fNotifyIcon
             // 
             this.fNotifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("fNotifyIcon.Icon")));
@@ -291,41 +299,13 @@
             this.fNotifyIcon.Visible = true;
             this.fNotifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.INotifyIconDoubleClicked);
             // 
-            // fAddBuddy
+            // fStatusStrip
             // 
-            this.fAddBuddy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.fAddBuddy.Label = "Add New Buddy";
-            this.fAddBuddy.Location = new System.Drawing.Point(196, 440);
-            this.fAddBuddy.Name = "fAddBuddy";
-            this.fAddBuddy.Size = new System.Drawing.Size(240, 25);
-            this.fAddBuddy.TabIndex = 1;
-            this.fAddBuddy.Add += new System.Action<uint>(this.IAddBuddy);
-            // 
-            // fBuddyCtrl
-            // 
-            this.fBuddyCtrl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.fBuddyCtrl.Location = new System.Drawing.Point(3, 3);
-            this.fBuddyCtrl.Name = "fBuddyCtrl";
-            this.fBuddyCtrl.Size = new System.Drawing.Size(436, 431);
-            this.fBuddyCtrl.TabIndex = 0;
-            // 
-            // fNeighborsCtrl
-            // 
-            this.fNeighborsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fNeighborsCtrl.Location = new System.Drawing.Point(3, 3);
-            this.fNeighborsCtrl.Name = "fNeighborsCtrl";
-            this.fNeighborsCtrl.Size = new System.Drawing.Size(436, 462);
-            this.fNeighborsCtrl.TabIndex = 0;
-            // 
-            // fRecentsCtrl
-            // 
-            this.fRecentsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fRecentsCtrl.Location = new System.Drawing.Point(3, 3);
-            this.fRecentsCtrl.Name = "fRecentsCtrl";
-            this.fRecentsCtrl.Size = new System.Drawing.Size(436, 462);
-            this.fRecentsCtrl.TabIndex = 0;
+            this.fStatusStrip.Location = new System.Drawing.Point(0, 552);
+            this.fStatusStrip.Name = "fStatusStrip";
+            this.fStatusStrip.Size = new System.Drawing.Size(454, 22);
+            this.fStatusStrip.TabIndex = 4;
+            this.fStatusStrip.Text = "statusStrip1";
             // 
             // MainForm
             // 
@@ -349,8 +329,6 @@
             this.fBuddiesTab.ResumeLayout(false);
             this.fNeighborsPage.ResumeLayout(false);
             this.fRecentsPage.ResumeLayout(false);
-            this.fStatusStrip.ResumeLayout(false);
-            this.fStatusStrip.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -369,9 +347,6 @@
         private System.Windows.Forms.ToolStripMenuItem fHelpMenu;
         private System.Windows.Forms.ToolStripMenuItem fDisconnectMenuItem;
         private System.Windows.Forms.TabPage fRecentsPage;
-        private System.Windows.Forms.StatusStrip fStatusStrip;
-        private System.Windows.Forms.ToolStripProgressBar fProgressBar;
-        private System.Windows.Forms.ToolStripStatusLabel fProgressLabel;
         private OnlinePlayers fBuddyCtrl;
         private System.Windows.Forms.ToolStripMenuItem fAboutMenuItem;
         private OnlinePlayers fNeighborsCtrl;
@@ -386,6 +361,7 @@
         private System.Windows.Forms.ToolStripMenuItem fMoulForumMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fMudSiteMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fDrcForumMenuItem;
+        private System.Windows.Forms.StatusStrip fStatusStrip;
     }
 }
 
