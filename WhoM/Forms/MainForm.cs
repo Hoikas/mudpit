@@ -126,62 +126,16 @@ namespace MUd {
         #endregion
 
         #region Auth Client Message Callbacks
-        private void IOnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
-            foreach (VaultNodeRef nRef in refs) {
-                if (!fVaultTree.ContainsKey(nRef.fParentIdx))
-                    fVaultTree.Add(nRef.fParentIdx, new List<uint>());
-                if (!fVaultTree[nRef.fParentIdx].Contains(nRef.fChildIdx)) {
-                    fLog.Debug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
-                    fVaultTree[nRef.fParentIdx].Add(nRef.fChildIdx);
-                }
-
-                //Is this a "core node" ?
-                if (nRef.fParentIdx == fActivePlayer) {
-                    uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
-                    fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
-                }
-            }
+        private void IOnAuthException(Exception e) {
+            Invoke(new Action<object, ThreadExceptionEventArgs>(Application_ThreadException), new object[] { null, new ThreadExceptionEventArgs(e) });
         }
 
-        private void IOnAuthVaultNodeRemoved(uint parentID, uint childID) {
-            if (!fVaultTree.ContainsKey(parentID)) return;
-            fVaultTree[parentID].Remove(childID);
-
-            //No TransID, so we'll figure out what to do ourselves
-            BeginInvoke(new Action<uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
+        private void IOnAuthKickedOff(ENetError reason) {
+            Invoke(new Action<ENetError>(IKickedByAuth), new object[] { reason });
         }
 
-        private void IOnAuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs) {
-            //Simply fire the callback...
-            //We don't know what the caller wants these nodes for anyway...
-            // - Method: ISomething(uint[] nodeIDs)
-            IFireTransCallback(transID, new object[] { nodeIDs });
-        }
-
-        private void IOnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
-            VaultNode node = VaultNode.Parse(data);
-            if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
-            else fNodes.Add(node.ID, node);
-
-            //Fire callback
-            // - Method: ISomething(VaultNode fetched);
-            IFireTransCallback(transID, new object[] { VaultNode.Parse(data) });
-        }
-
-        private void IOnAuthVaultNodeChanged(uint nodeID, Guid revUuid) {
-            if (!fNodes.ContainsKey(nodeID)) return;
-
-            //No TransID, so we will figure out what we need to update ourselves
-            BeginInvoke(new Action<uint>(IUpdateNode), new object[] { nodeID });
-        }
-
-        private void IOnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) {
-            if (fVaultTree.ContainsKey(parentID))
-                fVaultTree[parentID].Add(childID);
-
-            //No TransID, so don't use IFireTransCallbacks
-            if (fBaseNodes.ContainsValue(parentID))
-                BeginInvoke(new Action<uint, uint>(IAddToPanes), new object[] { parentID, childID });
+        private void IOnAuthPlayerInfo(uint transID, string name, uint idx, string shape, uint explorer) {
+            Invoke(new Action<string, uint>(IAddAvatar), new object[] { name, idx });
         }
 
         private void IOnAuthPlayerSet(uint transID, ENetError result) {
@@ -199,17 +153,62 @@ namespace MUd {
                     break;
             }
         }
+        private void IOnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) {
+            if (fVaultTree.ContainsKey(parentID))
+                fVaultTree[parentID].Add(childID);
 
-        private void IOnAuthPlayerInfo(uint transID, string name, uint idx, string shape, uint explorer) {
-            Invoke(new Action<string, uint>(IAddAvatar), new object[] { name, idx });
+            //No TransID, so don't use IFireTransCallbacks
+            if (fBaseNodes.ContainsValue(parentID))
+                BeginInvoke(new Action<uint, uint>(IAddToPanes), new object[] { parentID, childID });
+        }
+        
+        private void IOnAuthVaultNodeChanged(uint nodeID, Guid revUuid) {
+            if (!fNodes.ContainsKey(nodeID)) return;
+
+            //No TransID, so we will figure out what we need to update ourselves
+            BeginInvoke(new Action<uint>(IUpdateNode), new object[] { nodeID });
         }
 
-        private void IOnAuthKickedOff(ENetError reason) {
-            Invoke(new Action<ENetError>(IKickedByAuth), new object[] { reason });
+        private void IOnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
+            VaultNode node = VaultNode.Parse(data);
+            if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
+            else fNodes.Add(node.ID, node);
+
+            //Fire callback
+            // - Method: ISomething(VaultNode fetched);
+            IFireTransCallback(transID, new object[] { VaultNode.Parse(data) });
         }
 
-        private void IOnAuthException(Exception e) {
-            Invoke(new Action<object, ThreadExceptionEventArgs>(Application_ThreadException), new object[] { null, new ThreadExceptionEventArgs(e) });
+        private void IOnAuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs) {
+            //Simply fire the callback...
+            //We don't know what the caller wants these nodes for anyway...
+            // - Method: ISomething(uint[] nodeIDs)
+            IFireTransCallback(transID, new object[] { nodeIDs });
+        }
+
+        private void IOnAuthVaultNodeRemoved(uint parentID, uint childID) {
+            if (!fVaultTree.ContainsKey(parentID)) return;
+            fVaultTree[parentID].Remove(childID);
+
+            //No TransID, so we'll figure out what to do ourselves
+            BeginInvoke(new Action<uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
+        }
+
+        private void IOnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
+            foreach (VaultNodeRef nRef in refs) {
+                if (!fVaultTree.ContainsKey(nRef.fParentIdx))
+                    fVaultTree.Add(nRef.fParentIdx, new List<uint>());
+                if (!fVaultTree[nRef.fParentIdx].Contains(nRef.fChildIdx)) {
+                    fLog.Debug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
+                    fVaultTree[nRef.fParentIdx].Add(nRef.fChildIdx);
+                }
+
+                //Is this a "core node" ?
+                if (nRef.fParentIdx == fActivePlayer) {
+                    uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
+                    fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
+                }
+            }
         }
         #endregion
 
