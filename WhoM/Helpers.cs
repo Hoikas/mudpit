@@ -5,6 +5,21 @@ using System.Text;
 using Microsoft.Win32;
 
 namespace MUd {
+    public struct Callback {
+        public Delegate fFunc;
+        public object[] fMyArgs;
+
+        public Callback(Delegate func) {
+            fFunc = func;
+            fMyArgs = new object[0];
+        }
+
+        public Callback(Delegate func, object[] args) {
+            fFunc = func;
+            fMyArgs = args;
+        }
+    }
+
     public class Player {
         public string fName;
         public uint fID;

@@ -15,10 +15,9 @@ namespace MUd {
         internal AuthClient fAuthCli = new AuthClient();
         internal LogProcessor fLog = new LogProcessor("WhoM");
 
-        Dictionary<uint, uint[]> fNodesFound = new Dictionary<uint, uint[]>();
         Dictionary<uint, List<uint>> fVaultTree = new Dictionary<uint, List<uint>>();
         Dictionary<uint, VaultNode> fNodes = new Dictionary<uint, VaultNode>();
-        Dictionary<uint, ManualResetEvent> fMREs = new Dictionary<uint, ManualResetEvent>();
+        internal Dictionary<uint, Callback> fCallbacks = new Dictionary<uint, Callback>();
         internal uint fActivePlayer;
 
         Dictionary<EStandardNode, uint> fBaseNodes = new Dictionary<EStandardNode, uint>();
@@ -76,40 +75,57 @@ namespace MUd {
             }
         }
 
-        public VaultNode FetchNode(uint id) {
-            if (fNodes.ContainsKey(id)) return fNodes[id];
-            else {
-                IDownloadNode(id);
-                return fNodes[id];
+        #region Auth Client Helpers
+        public void FetchNode(uint nodeID, Callback cb) {
+            if (fNodes.ContainsKey(nodeID)) {
+                //We already have the node
+                //Fire the CB immediately!
+                BeginInvoke(cb.fFunc, ICreateArgArray(cb, new object[] { fNodes[nodeID] }));
+            } else {
+                //Do it the way we're supposed to.
+                uint trans = fAuthCli.FetchVaultNode(nodeID);
+                fCallbacks.Add(trans, cb);
             }
         }
 
-        public VaultNode[] FetchChildren(uint id) {
-            if (!fVaultTree.ContainsKey(id)) return new VaultNode[0];
+        public void FetchChildren(uint nodeID, Callback cb) {
+            if (!fVaultTree.ContainsKey(nodeID)) return; //Can't do it.
 
-            List<VaultNode> nodes = new List<VaultNode>();
-            List<uint> children = fVaultTree[id];
-            foreach (uint child in children)
-                nodes.Add(FetchNode(child));
-            return nodes.ToArray();
+            foreach (uint childID in fVaultTree[nodeID]) {
+                if (fNodes.ContainsKey(childID)) {
+                    //We already have the node
+                    //Fire the CB immediately!
+                    BeginInvoke(cb.fFunc, ICreateArgArray(cb, new object[] { fNodes[childID] }));
+                } else {
+                    //Do it the way we're supposed to.
+                    uint trans = fAuthCli.FetchVaultNode(childID);
+                    fCallbacks.Add(trans, cb);
+                }
+            }
         }
 
-        public VaultNode[] FindNode(VaultNode search) {
-            ManualResetEvent mre = new ManualResetEvent(false);
-            uint transID = fAuthCli.FindVaultNode(search.ToArray());
-            fMREs.Add(transID, mre);
-            mre.WaitOne();
-
-            uint[] ids = fNodesFound[transID];
-            fNodesFound.Remove(transID);
-
-            VaultNode[] nodes = new VaultNode[ids.Length];
-            for (int i = 0; i < ids.Length; i++)
-                nodes[i] = FetchNode(ids[i]);
-            return nodes;
+        private object[] ICreateArgArray(Callback cb, params object[] args) {
+            //Create the list of arguemnts
+            //End result
+            // - Method: ISomething([auth cb args], [custom args])
+            List<object> lArgs = new List<object>(args);
+            foreach (object arg in cb.fMyArgs)
+                lArgs.Add(arg);
+            return lArgs.ToArray();
         }
 
-        #region Auth Client CBs
+        private void IFireTransCallback(uint transID, params object[] args) {
+            if (fCallbacks.ContainsKey(transID)) {
+                Callback c = fCallbacks[transID];
+                fCallbacks.Remove(transID); //Delete it
+                
+                object[] debug = ICreateArgArray(c, args);
+                BeginInvoke(c.fFunc, debug);
+            }
+        }
+        #endregion
+
+        #region Auth Client Message Callbacks
         private void IOnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
             if (result != ENetError.kNetSuccess) {
                 IHideStatus();
@@ -128,7 +144,8 @@ namespace MUd {
 
                     //Is this a "core node" ?
                     if (nRef.fParentIdx == fActivePlayer) {
-                        fAuthCli.FetchVaultNode(nRef.fChildIdx);
+                        uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
+                        fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
                     }
                 }
             }
@@ -137,19 +154,16 @@ namespace MUd {
         private void IOnAuthVaultNodeRemoved(uint parentID, uint childID) {
             if (!fVaultTree.ContainsKey(parentID)) return;
             fVaultTree[parentID].Remove(childID);
+
+            //No TransID, so we'll figure out what to do ourselves
             BeginInvoke(new Action<uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
         }
 
         private void IOnAuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs) {
-            fNodesFound.Add(transID, nodeIDs);
-
-            //Release any MREs associated with this TransID
-            lock (fMREs) {
-                if (fMREs.ContainsKey(transID)) {
-                    fMREs[transID].Set();
-                    fMREs.Remove(transID);
-                }
-            }
+            //Simply fire the callback...
+            //We don't know what the caller wants these nodes for anyway...
+            // - Method: ISomething(uint[] nodeIDs)
+            IFireTransCallback(transID, new object[] { nodeIDs });
         }
 
         private void IOnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
@@ -160,34 +174,26 @@ namespace MUd {
             }
 
             VaultNode node = VaultNode.Parse(data);
-            lock (fNodes)
-                if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
-                else fNodes.Add(node.ID, node);
+            if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
+            else fNodes.Add(node.ID, node);
 
-            //Release any MREs associated with this TransID
-            lock (fMREs) {
-                if (fMREs.ContainsKey(transID)) {
-                    fMREs[transID].Set();
-                    fMREs.Remove(transID);
-                }
-            }
-
-            //Send the node to the pane populator
-            //The invoked method determines which folder we have, fetches any related nodes, etc.
-            BeginInvoke(new Action<uint>(IAddFolderToPanes), new object[] { node.ID });
+            //Fire callback
+            // - Method: ISomething(VaultNode fetched);
+            IFireTransCallback(transID, new object[] { VaultNode.Parse(data) });
         }
 
         private void IOnAuthVaultNodeChanged(uint nodeID, Guid revUuid) {
-            lock (fNodes) {
-                if (!fNodes.ContainsKey(nodeID)) return;
-                BeginInvoke(new Action<uint>(IUpdateNode), new object[] { nodeID });
-            }
+            if (!fNodes.ContainsKey(nodeID)) return;
+
+            //No TransID, so we will figure out what we need to update ourselves
+            BeginInvoke(new Action<uint>(IUpdateNode), new object[] { nodeID });
         }
 
         private void IOnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) {
             if (fVaultTree.ContainsKey(parentID))
                 fVaultTree[parentID].Add(childID);
 
+            //No TransID, so don't use IFireTransCallbacks
             if (fBaseNodes.ContainsValue(parentID))
                 BeginInvoke(new Action<uint, uint>(IAddToPanes), new object[] { parentID, childID });
         }
@@ -304,15 +310,20 @@ namespace MUd {
             VaultPlayerInfoNode search = new VaultPlayerInfoNode();
             search.PlayerID = obj;
 
-            VaultNode[] nodes = FindNode(search.BaseNode);
-            if (nodes.Length == 0) {
-                MessageBox.Show(this, String.Format("KI #{0} is not on the lattice", obj), "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                fLog.Error(String.Format("Attempted to add #{0} to buddies list, but he does not exist!", obj));
+            //Do the search
+            uint trans = fAuthCli.FindVaultNode(search.BaseNode.ToArray());
+            fCallbacks.Add(trans, new Callback(new Action<uint[], uint>(IAddBuddyCB), new object[] { obj }));
+        }
+
+        private void IAddBuddyCB(uint[] nodeIDs, uint buddy) {
+            if (nodeIDs.Length == 0) {
+                MessageBox.Show(this, String.Format("KI #{0} is not on the lattice", buddy), "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                fLog.Error(String.Format("Attempted to add buddy {0}, but he does not exist!", buddy));
                 return;
             }
 
-            fAuthCli.AddVaultNode(fBaseNodes[EStandardNode.kBuddyListFolder], nodes[0].ID, fActivePlayer);
-            fLog.Info(String.Format("Added #{0} to buddies", obj));
+            fAuthCli.AddVaultNode(fBaseNodes[EStandardNode.kBuddyListFolder], nodeIDs[0], fActivePlayer);
+            fLog.Info("Added a buddies");
         }
 
         private void IAvatarSelected(object sender, EventArgs e) {
@@ -381,57 +392,61 @@ namespace MUd {
         }
 
         private void IAddToPanes(uint parentID, uint childID) {
-            VaultNode node = FetchNode(childID);
+            Callback cb = new Callback(new Action<VaultNode, uint, uint>(IAddToPanes), new object[] { parentID, childID });
+            FetchNode(childID, cb); //See IAddToPanes
+        }
 
+        private void IAddToPanes(VaultNode node, uint parentID, uint childID) {
             if (node.NodeType == ENodeType.kNodePlayerInfo) {
-                VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
                 if (fBaseNodes[EStandardNode.kBuddyListFolder] == parentID)
-                    fBuddyCtrl.AddPlayerInfo(info);
+                    fBuddyCtrl.AddPlayerInfo(node);
                 if (fBaseNodes[EStandardNode.kHoodMembersFolder] == parentID)
-                    fNeighborsCtrl.AddPlayerInfo(info);
+                    fNeighborsCtrl.AddPlayerInfo(node);
                 if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
-                    fRecentsCtrl.AddPlayerInfo(info);
+                    fRecentsCtrl.AddPlayerInfo(node);
             }
         }
 
-        private void IAddFolderToPanes(uint id) {
-            VaultNode node = fNodes[id];
+        private void IAddFolderToPanes(VaultNode node) {
             if (node.NodeType == ENodeType.kNodePlayerInfoList) {
                 VaultPlayerInfoListNode list = new VaultPlayerInfoListNode(node);
-                if (list.FolderType == EStandardNode.kBuddyListFolder) fBaseNodes.Add(EStandardNode.kBuddyListFolder, id);
-                if (list.FolderType == EStandardNode.kIgnoreListFolder) fBaseNodes.Add(EStandardNode.kIgnoreListFolder, id);
-                if (list.FolderType == EStandardNode.kPeopleIKnowAboutFolder) fBaseNodes.Add(EStandardNode.kPeopleIKnowAboutFolder, id);
+
+                //Basic stuff
+                if (list.FolderType == EStandardNode.kBuddyListFolder) fBaseNodes.Add(EStandardNode.kBuddyListFolder, node.ID);
+                if (list.FolderType == EStandardNode.kIgnoreListFolder) fBaseNodes.Add(EStandardNode.kIgnoreListFolder, node.ID);
+                if (list.FolderType == EStandardNode.kPeopleIKnowAboutFolder) fBaseNodes.Add(EStandardNode.kPeopleIKnowAboutFolder, node.ID);
+
+                //If it's an AgeOwners folder, we have the Neighborhood :)
+                if (list.FolderType == EStandardNode.kAgeOwnersFolder) fBaseNodes.Add(EStandardNode.kHoodMembersFolder, node.ID);
             }
 
-            //Search for Neighbors
+            //Search for Neighborhood in the AgesIOwn
             if (node.NodeType == ENodeType.kNodeAgeInfoList) {
                 VaultAgeInfoListNode ages = new VaultAgeInfoListNode(node);
                 if (ages.FolderType == EStandardNode.kAgesIOwnFolder) {
-                    VaultNode[] children = FetchChildren(id);
-                    VaultAgeInfoNode hood = null;
-                    foreach (VaultNode link in children) {
-                        if (fVaultTree[link.ID].Count != 1) continue;
-                        VaultAgeInfoNode ageinfo = new VaultAgeInfoNode(FetchNode(fVaultTree[link.ID][0]));
-                        if (ageinfo.Filename == "Neighborhood") {
-                            hood = ageinfo;
-                            break;
-                        }
-                    }
-
-                    if (hood == null) return;
-                    VaultNode[] info_children = FetchChildren(hood.BaseNode.ID);
-                    foreach (VaultNode child in info_children) {
-                        if (child.NodeType == ENodeType.kNodePlayerInfoList) {
-                            VaultPlayerInfoListNode list = new VaultPlayerInfoListNode(child);
-                            if (list.FolderType == EStandardNode.kAgeOwnersFolder) {
-                                fBaseNodes.Add(EStandardNode.kHoodMembersFolder, list.BaseNode.ID);
-                                break;
-                            }
-                        }
-                    }
+                    Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
+                    FetchChildren(node.ID, cb);
                 }
             }
 
+            //Grab the AgeInfo...
+            if (node.NodeType == ENodeType.kNodeAgeLink) {
+                Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
+                FetchChildren(node.ID, cb);
+            }
+
+            //See if this is the neighborhood
+            if (node.NodeType == ENodeType.kNodeAgeInfo) {
+                VaultAgeInfoNode ageinfo = new VaultAgeInfoNode(node);
+                if (ageinfo.Filename == "Neighborhood") {
+                    //Yep! Grab children :)
+                    Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
+                    FetchChildren(node.ID, cb);
+                }
+            }
+
+            //FIXME: This is a strange hack...
+            //Aparently, it causes the selected tab to update. I would say this is spammy though.
             ITabSelected(null, new TabControlEventArgs(fTabControl.SelectedTab, fTabControl.SelectedIndex, TabControlAction.Selected));
         }
 
@@ -453,18 +468,6 @@ namespace MUd {
                 }
 
             return false;
-        }
-
-        private void IDownloadNode(uint id) {
-            string status = "Downloading Vault Node #" + id.ToString();
-            ISetStatus(status);
-            fLog.Info(status);
-
-            uint transID = fAuthCli.FetchVaultNode(id);
-            ManualResetEvent mre = new ManualResetEvent(false);
-            lock (fMREs) fMREs.Add(transID, mre);
-            mre.WaitOne();
-            IHideStatus();
         }
 
         private Player IGetPlayer() {
@@ -514,7 +517,11 @@ namespace MUd {
         }
 
         private void IRemoveFromPanes(uint parentID, uint childID) {
-            VaultNode node = FetchNode(childID);
+            Callback cb = new Callback(new Action<VaultNode, uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
+            FetchNode(childID, cb); //See IRemoveFromPanes
+        }
+
+        private void IRemoveFromPanes(VaultNode node, uint parentID, uint childID) {
             if (fBaseNodes[EStandardNode.kBuddyListFolder] == parentID)
                 fBuddyCtrl.RemoveNode(node);
             if (fBaseNodes[EStandardNode.kHoodMembersFolder] == parentID)
@@ -522,8 +529,6 @@ namespace MUd {
             if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
                 fRecentsCtrl.RemoveNode(node);
         }
-
-
 
         private void ISetStatus(string text) {
             if (InvokeRequired) {
@@ -556,8 +561,12 @@ namespace MUd {
         }
 
         private void IUpdateNode(uint idx) {
-            IDownloadNode(idx);
-            VaultNode node = fNodes[idx];
+            Callback cb = new Callback(new Action<VaultNode>(IUpdateNode));
+            uint trans = fAuthCli.FetchVaultNode(idx);
+            fCallbacks.Add(trans, cb);
+        }
+
+        private void IUpdateNode(VaultNode node) {
             if (node.NodeType == ENodeType.kNodePlayerInfo) {
                 VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
                 bool alerted = IDoBuddyUpdate(info, false);

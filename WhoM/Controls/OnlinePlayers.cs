@@ -32,7 +32,8 @@ namespace MUd {
             fDataGridView.SortCompare += new DataGridViewSortCompareEventHandler(IOnGridSort);
         }
 
-        public void AddPlayerInfo(VaultPlayerInfoNode info) {
+        public void AddPlayerInfo(VaultNode node) {
+            VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
             if (fPlayerToInfo.ContainsKey(info.PlayerID)) return;
 
             Bitmap img = IGetImage(info);
@@ -51,21 +52,47 @@ namespace MUd {
             fInitialized = false;
         }
 
+        private void IDelayedAgeName(uint[] matches, VaultPlayerInfoNode info) {
+            if (matches.Length == 1) {
+                Callback cb = new Callback(new Action<VaultNode, VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
+                uint trans = fParent.fAuthCli.FetchVaultNode(matches[0]);
+                fParent.fCallbacks.Add(trans, cb);
+            } else
+                fParent.fLog.Warn(String.Format("Got {0} AgeInfos!", matches.Length)); 
+        }
+
+        private void IDelayedAgeName(VaultNode node, VaultPlayerInfoNode info) {
+            VaultAgeInfoNode age = new VaultAgeInfoNode(node);
+
+            string name = String.Empty;
+            if (age.Description != String.Empty)
+                name = age.Description;
+            else
+                name = String.Format("{0} ({1}) {2}", age.UserDefinedName, age.SequenceNumber, age.InstanceName);
+
+            //Find the player's row
+            int idx = -1;
+            foreach (DataGridViewRow r in fDataGridView.Rows) {
+                if (Convert.ToUInt32(r.Cells[1].Value) == info.PlayerID) {
+                    idx = fDataGridView.Rows.IndexOf(r);
+                    break;
+                }
+            }
+
+            //Actually update the entry
+            fDataGridView.Rows[idx].Cells[3].Value = name;
+        }
+
         private string IGetAgeName(VaultPlayerInfoNode info) {
             if (kAgesToName.Contains(info.AgeInstanceName)) {
                 VaultAgeInfoNode search = new VaultAgeInfoNode();
                 search.InstanceName = info.AgeInstanceName;
                 search.InstanceUUID = info.AgeInstanceUUID;
-                VaultNode[] matches = fParent.FindNode(search.BaseNode);
-
-                if (matches.Length == 1) {
-                    VaultAgeInfoNode age = new VaultAgeInfoNode(matches[0]);
-                    if (age.Description != String.Empty)
-                        return age.Description;
-                    else
-                        return String.Format("{0} ({1}) {2}", age.UserDefinedName, age.SequenceNumber, age.InstanceName);
-                } else
-                    fParent.fLog.Warn(String.Format("Got {0} AgeInfos! [NAME: {1}] [UUID: {2}]", matches.Length, info.AgeInstanceName, info.AgeInstanceUUID)); 
+                
+                //Do the search
+                Callback cb = new Callback(new Action<uint[], VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
+                uint trans = fParent.fAuthCli.FindVaultNode(search.BaseNode.ToArray());
+                fParent.fCallbacks.Add(trans, cb);
             }
 
             if (info.AgeInstanceName == "AhnonayCathedral")
@@ -122,18 +149,8 @@ namespace MUd {
             fInitialized = true;
             fBaseNode = folder;
 
-            //Hacky Solution
-            //Don't freeze the UI while fetching players
-            fWorker = new Thread(new ThreadStart(IInitHack));
-            fWorker.Start();
-        }
-
-        private void IInitHack() {
-            VaultNode[] children = fParent.FetchChildren(fBaseNode);
-            foreach (VaultNode node in children) {
-                VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
-                Invoke(new Action<VaultPlayerInfoNode>(AddPlayerInfo), new object[] { info });
-            }
+            Callback cb = new Callback(new Action<VaultNode>(AddPlayerInfo));
+            fParent.FetchChildren(folder, cb);
         }
         
         private void IOnGridSort(object sender, DataGridViewSortCompareEventArgs e) {
