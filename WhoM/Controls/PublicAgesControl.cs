@@ -10,6 +10,8 @@ using System.Windows.Forms;
 namespace MUd {
     public partial class PublicAgesControl : UserControl {
 
+        DateTime fLastRefresh;
+
         MainForm fParent;
         public new MainForm Parent {
             get { return fParent; }
@@ -21,12 +23,27 @@ namespace MUd {
         }
 
         public bool RefreshAgeList() {
-            IRequestAges("city");
-            IRequestAges("GreatTreePub");   //Watcher's Pub
-            IRequestAges("Neighborhood");
-            IRequestAges("Neighborhood02"); //Kirel
-            
-            return true;
+            //Only allow ONE refresh per minute!!!
+#if !DEBUG
+            if ((DateTime.Now - fLastRefresh) > new TimeSpan(0, 1, 0)) {
+#endif
+                IRequestAges("city");
+                IRequestAges("GreatTreePub");   //Watcher's Pub
+                IRequestAges("Neighborhood");
+                IRequestAges("Neighborhood02"); //Kirel
+
+                //Hacky Cyan stuff...
+                //Note: Use BOTH instance and uuid
+                //      K'veer is hood instanced and public instanced
+                //      We want the public one...
+                ICountPlayers(fWritersPub, "GuildPub-Writers", "Guild Pub", "The Guild of Writer's Pub");
+
+                fLastRefresh = DateTime.Now;
+                return true;
+#if !DEBUG
+            } else
+                return false;
+#endif
         }
 
         private void IGotAges(NetAgeInfo[] ages) {
@@ -36,7 +53,7 @@ namespace MUd {
                 //Find the DataGridViewRow for this age
                 int index = -1;
                 for (int i = 0; i < fDataGridView.Rows.Count; i++) {
-                    if (fDataGridView.Rows[i].Tag == null) continue;
+                    if (!(fDataGridView.Rows[i].Tag is NetAgeInfo)) continue;
                     if (fDataGridView.Rows[i].Tag.Equals(nai)) {
                         index = i;
                         break;
@@ -75,6 +92,11 @@ namespace MUd {
             }
 
             return String.Format("You should never see this. [FN: {0}]", nai.fFilename);
+        }
+
+        private void IRefreshLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            if (!RefreshAgeList())
+                MessageBox.Show("You must wait one minute between refreshes.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void IRequestAges(string filename) {

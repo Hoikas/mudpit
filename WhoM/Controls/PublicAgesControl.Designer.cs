@@ -112,6 +112,7 @@
             this.fRefreshLink.TabIndex = 2;
             this.fRefreshLink.TabStop = true;
             this.fRefreshLink.Text = "Refresh List";
+            this.fRefreshLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.IRefreshLinkClicked);
             // 
             // PublicAgesControl
             // 

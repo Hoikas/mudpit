@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace MUd {
     public partial class MainForm : Form {
@@ -21,6 +22,7 @@ namespace MUd {
         internal uint fActivePlayer;
 
         Dictionary<EStandardNode, uint> fBaseNodes = new Dictionary<EStandardNode, uint>();
+        Timer fAgeRefresh = new Timer();
 
         [STAThread]
         static void Main() {
@@ -370,8 +372,12 @@ namespace MUd {
                     fNeighborsCtrl.SetFolder(fBaseNodes[EStandardNode.kHoodMembersFolder]);
 
             if (tag == "publicages")
-                if (fAuthCli.Connected) //Don't fail ;)
+                if (fAuthCli.Connected) { //Don't fail ;)
                     fPublicAgesCtrl.RefreshAgeList();
+                    fAgeRefresh.Tick += new EventHandler(IRefreshAges);
+                    fAgeRefresh.Interval = 300000; //Five minutes
+                    fAgeRefresh.Start();
+                }
 
             if (tag == "recents")
                 if (fBaseNodes.ContainsKey(EStandardNode.kPeopleIKnowAboutFolder))
@@ -497,6 +503,11 @@ namespace MUd {
 
             fNotifyIcon.ShowBalloonTip(30, "Disconnected", display, ToolTipIcon.Warning);
             IDisconnect(null, null);
+        }
+
+        private void IRefreshAges(object sender, EventArgs e) {
+            if (fTabControl.SelectedTab.Tag.Equals("publicages"))
+                fPublicAgesCtrl.RefreshAgeList();
         }
 
         private void IRemoveFromPanes(uint parentID, uint childID) {
