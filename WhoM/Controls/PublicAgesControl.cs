@@ -68,6 +68,10 @@ namespace MUd {
                     fDataGridView.Rows[index].Cells[2].Value = nai.fCurrPopulation;
                 }
             }
+
+            //Resort, if needed.
+            if (fDataGridView.SortedColumn != null)
+                fDataGridView.Sort(fDataGridView.SortedColumn, (fDataGridView.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending));
         }
 
         private string IMakeDescription(NetAgeInfo nai) {
