@@ -32,12 +32,6 @@ namespace MUd {
                 IRequestAges("Neighborhood");
                 IRequestAges("Neighborhood02"); //Kirel
 
-                //Hacky Cyan stuff...
-                //Note: Use BOTH instance and uuid
-                //      K'veer is hood instanced and public instanced
-                //      We want the public one...
-                ICountPlayers(fWritersPub, "GuildPub-Writers", "Guild Pub", "The Guild of Writer's Pub");
-
                 fLastRefresh = DateTime.Now;
                 return true;
 #if !DEBUG
