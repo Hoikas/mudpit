@@ -10,6 +10,13 @@ using System.Windows.Forms;
 namespace MUd {
     public partial class PublicAgesControl : UserControl {
 
+        readonly Guid fCartographersPub = new Guid("35624301-841e-4a07-8db6-b735cf8f1f53");
+        readonly Guid fGreetersPub = new Guid("381fb1ba-20a0-45fd-9bcb-fd5922439d05");
+        readonly Guid fKveer = new Guid("68e219e0-ee25-4df0-b855-0435584e29e2");
+        readonly Guid fMaintainersPub = new Guid("e8306311-56d3-4954-a32d-3da01712e9b5");
+        readonly Guid fMessengersPub = new Guid("9420324e-11f8-41f9-b30b-c896171a8712");
+        readonly Guid fWritersPub = new Guid("5cf4f457-d546-47dc-80eb-a07cdfefa95d");
+
         DateTime fLastRefresh;
 
         MainForm fParent;
@@ -28,24 +35,32 @@ namespace MUd {
 
         public bool RefreshAgeList() {
             //Only allow ONE refresh per minute!!!
-#if !DEBUG
-            if ((DateTime.Now - fLastRefresh) > new TimeSpan(0, 1, 0)) {
-#endif
-                IRequestAges("city");
-                IRequestAges("GreatTreePub");   //Watcher's Pub
-                IRequestAges("Neighborhood");
-                IRequestAges("Neighborhood02"); //Kirel
+            //Unless the DGV is empty
+            if ((DateTime.Now - fLastRefresh) > new TimeSpan(0, 1, 0) || fDataGridView.Rows.Count == 0) {
+                IRequestAge("city");
+                IRequestAge("GreatTreePub");   //Watcher's Pub
+                IRequestAge("GuildPub-Cartograpers");
+                IRequestAge("GuildPub-Greeters");
+                IRequestAge("GuildPub-Maintainers");
+                IRequestAge("GuildPub-Messengers");
+                IRequestAge("GuildPub-Writers");
+                IRequestAge("Kveer");
+                IRequestAge("Neighborhood");
+                IRequestAge("Neighborhood02"); //Kirel
 
                 fLastRefresh = DateTime.Now;
                 return true;
-#if !DEBUG
             } else
                 return false;
-#endif
         }
 
-        private void IGotAges(NetAgeInfo[] ages) {
-            if (ages.Length == 0) return;
+        private void IGotAges(NetAgeInfo[] ages, string filename) {
+            if (ages.Length == 0) {
+                //Arrrrr! We're pirates.
+                if (filename.Contains("GuildPub") || filename.Equals("Kveer"))
+                    ITryToHackGpKveer(filename);
+                return;
+            }
 
             foreach (NetAgeInfo nai in ages) {
                 //Find the DataGridViewRow for this age
@@ -62,12 +77,12 @@ namespace MUd {
                 //Otherwise, update old row
                 if (index == -1) {
                     DataGridViewRow r = new DataGridViewRow();
-                    r.CreateCells(fDataGridView, new object[] { nai.fInstanceName, IMakeDescription(nai), nai.fCurrPopulation, "View Details" });
+                    r.CreateCells(fDataGridView, new object[] { IMakeInstance(nai), IMakeDescription(nai), nai.fCurrPopulation, "View Details" });
                     r.Tag = nai;
 
                     fDataGridView.Rows.Add(r);
                 } else {
-                    fDataGridView.Rows[index].Cells[0].Value = nai.fInstanceName;
+                    fDataGridView.Rows[index].Cells[0].Value = IMakeInstance(nai);
                     fDataGridView.Rows[index].Cells[1].Value = IMakeDescription(nai);
                     fDataGridView.Rows[index].Cells[2].Value = nai.fCurrPopulation;
                 }
@@ -82,21 +97,42 @@ namespace MUd {
         }
 
         private string IMakeDescription(NetAgeInfo nai) {
-            if (nai.fDescription != String.Empty)
+            if (nai.fFilename == "city") {
+                return "D'ni-Ae'gura";
+            } else if (nai.fFilename == "GreatTreePub") {
+                return "The Watcher's Sanctuary";
+            } else if (nai.fFilename == "GuildPub-Cartographers") {
+                return "The Cartographers' Guild Pub";
+            } else if (nai.fFilename == "GuildPub-Greeters") {
+                return "The Greeters' Guild Pub";
+            } else if (nai.fFilename == "GuildPub-Maintainers") {
+                return "The Maintainers' Guild Pub";
+            } else if (nai.fFilename == "GuildPub-Messengers") {
+                return "The Messengers' Guild Pub";
+            } else if (nai.fFilename == "GuildPub-Writers") {
+                return "The Writers' Guild Pub";
+            } else if (nai.fFilename == "Kveer") {
+                return "Atrus's Childhood Prison";
+            } else if (nai.fFilename == "Neighborhood02") {
+                return "The DRC's Guild Age";
+            } else if (nai.fDescription != String.Empty)
                 return nai.fDescription;
             else if (nai.fSequenceNumber != 0)
                 return String.Format("{0} ({1}) {2}", nai.fUserName, nai.fSequenceNumber, nai.fInstanceName);
-            else {
-                if (nai.fFilename == "city") {
-                    return "D'ni-Ae'gura";
-                } else if (nai.fFilename == "GreatTreePub") {
-                    return "The Watcher's Sanctuary";
-                } else if (nai.fFilename == "Neighborhood02") {
-                    return "The DRC's Guild Neighborhood";
-                }
-            }
+            else if (nai.fUserName != String.Empty)
+                return String.Format("{0} {1}", nai.fUserName, nai.fInstanceName);
 
             return String.Format("You should never see this. [FN: {0}]", nai.fFilename);
+        }
+
+        private string IMakeInstance(NetAgeInfo nai) {
+            if (nai.fFilename.Contains("GuildPub")) {
+                return "Guild Pub";
+            } else if (nai.fFilename == "Kveer") {
+                return "K'veer";
+            } else {
+                return nai.fInstanceName;
+            }
         }
 
         private void IRefreshLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
@@ -105,9 +141,51 @@ namespace MUd {
                 MessageBox.Show("You must wait one minute between refreshes.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void IRequestAges(string filename) {
+        private void IRequestAge(string filename) {
             uint trans = fParent.AuthCli.GetPublicAges(filename);
-            fParent.RegisterAuthCB(trans, new Action<NetAgeInfo[]>(IGotAges));
+            fParent.RegisterAuthCB(trans, new Action<NetAgeInfo[], string>(IGotAges), new object[] { filename });
+        }
+
+        private void ITryToHackGpKveer(string filename) {
+            Guid age = Guid.Empty;
+            if (filename.Equals("GuildPub-Cartographers"))
+                age = fCartographersPub;
+            else if (filename.Equals("GuildPub-Greeters"))
+                age = fGreetersPub;
+            else if (filename.Equals("GuildPub-Maintainers"))
+                age = fMaintainersPub;
+            else if (filename.Equals("GuildPub-Messengers"))
+                age = fMessengersPub;
+            else if (filename.Equals("GuildPub-Writers"))
+                age = fWritersPub;
+            else if (filename.Equals("Kveer"))
+                age = fKveer;
+
+            if (age == Guid.Empty)
+                return;
+
+            VaultAgeInfoNode info = new VaultAgeInfoNode();
+            info.Filename = filename;
+            info.InstanceUUID = age;
+
+            uint transID = fParent.AuthCli.FindVaultNode(info.BaseNode.ToArray());
+            fParent.RegisterAuthCB(transID, new Action<uint[], string>(ITryToHackGpKveer), new object[] { filename });
+        }
+
+        private void ITryToHackGpKveer(uint[] nodeIDs, string filename) {
+            if (nodeIDs.Length == 0) {
+                fParent.LogError(String.Format("Tried to make {0} public, but we could not find it in the vault!", filename));
+                return;
+            } else if (nodeIDs.Length > 1) {
+                fParent.LogError(String.Format("Tried to make {0} public, but we got too many ages!!!", filename));
+                return;
+            }
+
+            fParent.LogInfo(String.Format("Making {0} public...", filename));
+            fParent.AuthCli.SetAgePublic(nodeIDs[0], true);
+
+            //Re-request...
+            IRequestAge(filename);
         }
     }
 }

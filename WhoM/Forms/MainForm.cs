@@ -47,7 +47,7 @@ namespace MUd {
             fRecentsCtrl.Parent = this;
 
 #if !DEBUG
-            RegisterExceptionEvents();
+            RegisterExceptionHandler();
 #endif
 
             //Are we running Mono?

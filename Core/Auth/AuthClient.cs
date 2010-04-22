@@ -92,7 +92,7 @@ namespace MUd {
             fStream.FlushWriter();
 
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
-            fChgHack.WaitOne();
+            fChgHack.Reset(); fChgHack.WaitOne();
 
             return true;
         }
@@ -309,6 +309,19 @@ namespace MUd {
             }
 
             return req.fTransID;
+        }
+
+        public void SetAgePublic(uint ageInfoID, bool isPublic) {
+            Auth_SetAgePublic req = new Auth_SetAgePublic();
+            req.fAgeInfoID = ageInfoID;
+            req.fPublic = isPublic;
+
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)AuthCli2Srv.SetAgePublic);
+                req.Write(fStream);
+                fStream.FlushWriter();
+            }
         }
 
         private void IReceive(IAsyncResult ar) {

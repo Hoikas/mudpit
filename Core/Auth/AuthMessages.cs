@@ -538,6 +538,21 @@ namespace MUd {
         }
     }
 
+    public struct Auth_SetAgePublic {
+        public uint fAgeInfoID;
+        public bool fPublic;
+
+        public void Read(UruStream s) {
+            fAgeInfoID = s.ReadUInt();
+            fPublic = s.ReadBool();
+        }
+
+        public void Write(UruStream s) {
+            s.WriteUInt(fAgeInfoID);
+            s.WriteBool(fPublic);
+        }
+    }
+
     public struct Auth_SetPlayerReply {
         public uint fTransID;
         public ENetError fResult;

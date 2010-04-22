@@ -66,7 +66,10 @@ namespace MUd {
 
             string name = String.Empty;
             if (age.Description == String.Empty)
-                name = String.Format("{0} ({1}) {2}", age.UserDefinedName, age.SequenceNumber, age.InstanceName);
+                if (age.SequenceNumber == 0)
+                    name = String.Format("{0} {1}", age.UserDefinedName, age.InstanceName);
+                else
+                    name = String.Format("{0} ({1}) {2}", age.UserDefinedName, age.SequenceNumber, age.InstanceName);
             else
                 name = age.Description;
                 
