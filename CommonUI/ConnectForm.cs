@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -13,85 +14,114 @@ namespace MUd {
     public partial class ConnectForm : Form {
 
         readonly Guid kUruExplorer = new Guid("ea489821-6c35-4bd0-9dae-bb17c585e680");
+        uint fBuildID = 0;
 
         WebRequest fShardReq;
         Shard OurShard {
             get { return (Shard)fShardDropDown.Items[fShardDropDown.SelectedIndex]; }
         }
 
-        AuthClient fAuthCli;
-        AuthLoggedIn fLoginCB;
-        AuthClientRegistered fRegisterCB;
+        #region Internal Stuff
+        CallbackCliForm fParent;
+        public new CallbackCliForm Parent {
+            set { fParent = value; }
+        }
 
-        GateClient fGateCli = new GateClient();
-        FileClient fFileCli = new FileClient();
-
-        LogProcessor fLog;
-        ManualResetEvent fBuildReset = new ManualResetEvent(false);
-        ManualResetEvent fRegisterReset = new ManualResetEvent(false);
-
-        uint fBuildID = 0;
         bool fCanAutoConnect = false;
+        public bool CanAutoConnect {
+            set { fCanAutoConnect = value; }
+        }
+        #endregion
 
-        public ConnectForm(AuthClient cli, LogProcessor log, bool canAutoConnect) {
-            fLog = log;
+        public bool AutoConnect {
+            get { return fAutoConnect.Checked; }
+            set { fAutoConnect.Checked = value; }
+        }
+
+        public string Password {
+            get { return fPasswordBox.Text; }
+            set { fPasswordBox.Text = value; }
+        }
+
+        public bool RememberMe {
+            get { return fRememberMe.Checked; }
+            set { fRememberMe.Checked = value; }
+        }
+
+        public string Username {
+            get { return fUserBox.Text; }
+            set { fUserBox.Text = value; }
+        }
+
+        string fPrefShard;
+        public string WantShard {
+            get { return fPrefShard; }
+            set { fPrefShard = value; }
+        }
+
+        public ConnectForm() {
             InitializeComponent();
-            if (Prefrences.RememberLogin) {
-                fAutoConnect.Checked = Prefrences.AutoConnect;
-                fRememberMe.Checked = true;
-                fUserBox.Text = Prefrences.Username;
-                fPasswordBox.Text = Prefrences.Password;
+
+            if (!File.Exists("shards.xml")) {
+                IGrabShardList();
+            } else {
+                FileInfo info = new FileInfo("shards.xml");
+
+                //Update if over a week old
+                if ((info.LastWriteTime - DateTime.Now) > new TimeSpan(7, 0, 0, 0))
+                    IGrabShardList();
+                else {
+                    FileStream fs = new FileStream("shards.xml", FileMode.Open, FileAccess.Read);
+                    ShardList list = ShardList.Create(fs);
+                    IInvokedUpdate(list.fShards);
+                    fs.Close();
+                }
             }
-
-            fRegisterCB = new AuthClientRegistered(IOnAuthCliRegister);
-            fLoginCB = new AuthLoggedIn(IOnAuthLoggedIn);
-            fCanAutoConnect = canAutoConnect;
-
-            fAuthCli = cli;
-            fAuthCli.ClientRegistered += fRegisterCB;
-            fAuthCli.LoggedIn += fLoginCB;
-
-            fShardReq = WebRequest.Create("http://mud.hoikas.com/shards.xml");
-            fShardReq.BeginGetResponse(new AsyncCallback(IGotShardList), null);
-
-            fAuthCli.ProductID = kUruExplorer;
-            fFileCli.ProductID = kUruExplorer;
-            fGateCli.ProductID = kUruExplorer;
-
-            fGateCli.GotFileSrvIP += new GateIP(IGotFileSrvIP);
-            fFileCli.GotBuildID += new FileBuildIdReply(IGotBuildID);
         }
 
-        private void IGotBuildID(uint transID, ENetError result, uint buildID) {
-            fFileCli.Disconnect();
+        private void IGotBuildID(uint buildID) {
+            fParent.FileCli.Disconnect();
             fBuildID = buildID;
-            fBuildReset.Set();
 
-            fLog.Debug(String.Format("BuildID: [{0}]", buildID));
+            fParent.AuthCli.BuildID = buildID;
+            fParent.AuthCli.BranchID = 1;
+            fParent.AuthCli.ProductID = kUruExplorer;
+            fParent.AuthCli.Connect();
+
+            uint transID = fParent.AuthCli.Login(fUserBox.Text, fPasswordBox.Text, fParent.AuthCli.Challenge);
+            fParent.RegisterAuthCB(transID, new Action<ENetError, uint, uint[], Guid>(IEndLogin));
         }
 
-        private void IGotFileSrvIP(uint transID, string ip) {
-            fGateCli.Disconnect();
+        private void IGotFileIP(string ip) {
+            fParent.GateCli.Disconnect();
 
-            fFileCli.Host = ip;
-            fFileCli.Connect();
-            fFileCli.RequestBuildID();
+            fParent.FileCli.Host = ip;
+            fParent.FileCli.ProductID = kUruExplorer;
+            fParent.FileCli.Connect();
 
-            fLog.Debug(String.Format("FileSrv IP: [{0}]", ip));
+            uint transID = fParent.FileCli.RequestBuildID();
+            fParent.RegisterFileCB(transID, new Action<uint>(IGotBuildID));
         }
 
         private void IGotShardList(IAsyncResult ar) {
             WebResponse resp = fShardReq.EndGetResponse(ar);
-            ShardList s = ShardList.Create(resp.GetResponseStream());
-            Invoke(new Action<Shard[]>(IInvokedUpdate), new object[] { s.fShards });
+            Stream s = resp.GetResponseStream();
+            ShardList list = ShardList.Create(s);
+            Invoke(new Action<Shard[]>(IInvokedUpdate), new object[] { list.fShards });
+
+            //TODO: Cache!
+        }
+
+        private void IGrabShardList() {
+            fShardReq = WebRequest.Create("http://mud.hoikas.com/shards.xml");
+            fShardReq.BeginGetResponse(new AsyncCallback(IGotShardList), null);
         }
 
         private void IInvokedUpdate(Shard[] shards) {
             int sel = 0;
             foreach (Shard s in shards) {
-                string test = Prefrences.Shard;
                 fShardDropDown.Items.Add(s);
-                if (s.fName == test)
+                if (s.fName.Equals(fPrefShard))
                     sel = fShardDropDown.Items.IndexOf(s);
             }
 
@@ -104,16 +134,8 @@ namespace MUd {
                 IBeginLoginProcess(null, null);
         }
 
-        private void IOnAuthCliRegister(uint challenge) {
-            fRegisterReset.Set();
-        }
-
-        private void IOnAuthLoggedIn(uint transID, ENetError result, uint flags, uint[] droidKey, uint billing, Guid acctUuid) {
-            Invoke(new Action<ENetError>(IEndLogin), new object[] { result });
-        }
-
-        private void IEndLogin(ENetError result) {
-            fLog.Info(String.Format("Login Complete [RESULT: {0}]", result.ToString().Substring(4)));
+        private void IEndLogin(ENetError result, uint flags, uint[] droid, Guid uuid) {
+            fParent.LogInfo(String.Format("Login Complete [RESULT: {0}]", result.ToString().Substring(4)));
 
             switch (result) {
                 case ENetError.kNetErrAccountBanned:
@@ -136,14 +158,6 @@ namespace MUd {
                     break;
                 case ENetError.kNetSuccess:
                     DialogResult = DialogResult.OK;
-                    if (fRememberMe.Checked) {
-                        Prefrences.AutoConnect = fAutoConnect.Checked;
-                        Prefrences.RememberLogin = true;
-                        Prefrences.Shard = OurShard.fName;
-                        Prefrences.Username = fUserBox.Text;
-                        Prefrences.Password = fPasswordBox.Text;
-                    }
-
                     Close();
                     break;
                 default:
@@ -170,34 +184,30 @@ namespace MUd {
             fLogin.Enabled = false; //Don't allow spam.
 
             //Set encryption keys...
-            fAuthCli.N = OurShard.fAuth.N;
-            fAuthCli.X = OurShard.fAuth.X;
-            fGateCli.N = OurShard.fGate.N;
-            fGateCli.X = OurShard.fGate.X;
+            fParent.AuthCli.N = OurShard.fAuth.N;
+            fParent.AuthCli.X = OurShard.fAuth.X;
+            fParent.GateCli.N = OurShard.fGate.N;
+            fParent.GateCli.X = OurShard.fGate.X;
 
             //IP Addresses...
-            fAuthCli.Host = OurShard.fAuth.fHost;
-            fGateCli.Host = OurShard.fGate.fHost;
+            fParent.AuthCli.Host = OurShard.fAuth.fHost;
+            fParent.GateCli.Host = OurShard.fGate.fHost;
 
             if (fBuildID == 0) {
-                fGateCli.Connect();
-                fGateCli.GetFileHost(true);
-                fBuildReset.WaitOne(); //Wait on the BuildID
+                fParent.GateCli.ProductID = kUruExplorer;
+                fParent.GateCli.Connect();
+
+                uint transID = fParent.GateCli.GetFileHost(true);
+                fParent.RegisterGateCB(transID, new Action<string>(IGotFileIP));
+            } else {
+                fParent.AuthCli.BuildID = fBuildID;
+                fParent.AuthCli.BranchID = 1;
+                fParent.AuthCli.ProductID = kUruExplorer;
+                fParent.AuthCli.Connect();
+
+                uint transID = fParent.AuthCli.Login(fUserBox.Text, fPasswordBox.Text, fParent.AuthCli.Challenge);
+                fParent.RegisterAuthCB(transID, new Action<ENetError, uint, uint[], Guid>(IEndLogin));
             }
-
-            if (!fAuthCli.Connected) {
-                fAuthCli.BranchID = 1;
-                fAuthCli.BuildID = fBuildID;
-                fAuthCli.Connect();
-                fRegisterReset.WaitOne(); //Wait for the ClientRegister
-            }
-
-            fAuthCli.Login(fUserBox.Text, fPasswordBox.Text, fAuthCli.Challenge);
-        }
-
-        private void IFormClosing(object sender, FormClosingEventArgs e) {
-            fAuthCli.ClientRegistered -= fRegisterCB;
-            fAuthCli.LoggedIn -= fLoginCB;
         }
 
         private void IRememberMeChecked(object sender, EventArgs e) {

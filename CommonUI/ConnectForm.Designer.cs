@@ -185,7 +185,6 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.Text = "Connect to a Shard";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IFormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

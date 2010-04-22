@@ -11,14 +11,10 @@ using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
 namespace MUd {
-    public partial class MainForm : Form {
-
-        internal AuthClient fAuthCli = new AuthClient();
-        internal LogProcessor fLog = new LogProcessor("WhoM");
+    public partial class MainForm : CallbackCliForm {
 
         Dictionary<uint, List<uint>> fVaultTree = new Dictionary<uint, List<uint>>();
         Dictionary<uint, VaultNode> fNodes = new Dictionary<uint, VaultNode>();
-        internal Dictionary<uint, Callback> fCallbacks = new Dictionary<uint, Callback>();
         internal uint fActivePlayer;
 
         Dictionary<EStandardNode, uint> fBaseNodes = new Dictionary<EStandardNode, uint>();
@@ -41,12 +37,7 @@ namespace MUd {
             Application.Exit();
         }
 
-        public MainForm() {
-#if !DEBUG
-            if (!System.IO.File.Exists("MUd.conf"))
-                fLog.LogLevel = ELogType.kLogWarning;
-#endif
-
+        public MainForm() : base() {
             InitializeComponent();
 
             fBuddyCtrl.Parent = this;
@@ -56,18 +47,8 @@ namespace MUd {
             fRecentsCtrl.Parent = this;
 
 #if !DEBUG
-            fAuthCli.ExceptionHandler += new ExceptionArgs(IOnAuthException);
+            RegisterExceptionEvents();
 #endif
-            fAuthCli.GotPublicAges += new AuthGotPublicAges(IOnAuthGotPublicAges);
-            fAuthCli.KickedOff += new AuthKickedOff(IOnAuthKickedOff);
-            fAuthCli.PlayerInfo += new AuthPlayerInfo(IOnAuthPlayerInfo);
-            fAuthCli.PlayerSet += new AuthResult(IOnAuthPlayerSet);
-            fAuthCli.VaultNodeAdded += new AuthVaultNodeAdded(IOnAuthVaultNodeAdded);
-            fAuthCli.VaultNodeChanged += new AuthVaultNodeChanged(IOnAuthVaultNodeChanged);
-            fAuthCli.VaultNodeFetched += new AuthVaultNodeFetched(IOnAuthVaultNodeFetched);
-            fAuthCli.VaultNodeFound += new AuthVaultNodeFound(IOnAuthVaultNodeFound);
-            fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(IOnAuthVaultNodeRemoved);
-            fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(IOnAuthVaultTreeFetched);
 
             //Are we running Mono?
             switch (Environment.OSVersion.Platform) {
@@ -80,144 +61,120 @@ namespace MUd {
         }
 
         #region Auth Client Helpers
-        public void FetchNode(uint nodeID, Callback cb) {
+        public void FetchNode(uint nodeID, Delegate func, object[] args) {
             if (fNodes.ContainsKey(nodeID)) {
-                //We already have the node
-                //Fire the CB immediately!
-                BeginInvoke(cb.fFunc, ICreateArgArray(cb, new object[] { fNodes[nodeID] }));
+                BeginInvoke(func, CreateArgArray(args, new object[] { fNodes[nodeID] }));
             } else {
                 //Do it the way we're supposed to.
-                uint trans = fAuthCli.FetchVaultNode(nodeID);
-                fCallbacks.Add(trans, cb);
+                uint trans = AuthCli.FetchVaultNode(nodeID);
+                RegisterAuthCB(trans, func, args);
             }
         }
 
-        public void FetchChildren(uint nodeID, Callback cb) {
+        public void FetchChildren(uint nodeID, Delegate func) { FetchChildren(nodeID, func, new object[0]); }
+        public void FetchChildren(uint nodeID, Delegate func, object[] args) {
             if (!fVaultTree.ContainsKey(nodeID)) return; //Can't do it.
 
             foreach (uint childID in fVaultTree[nodeID]) {
                 if (fNodes.ContainsKey(childID)) {
                     //We already have the node
                     //Fire the CB immediately!
-                    BeginInvoke(cb.fFunc, ICreateArgArray(cb, new object[] { fNodes[childID] }));
+                    BeginInvoke(func, CreateArgArray(args, new object[] { fNodes[childID] }));
                 } else {
                     //Do it the way we're supposed to.
-                    uint trans = fAuthCli.FetchVaultNode(childID);
-                    fCallbacks.Add(trans, cb);
+                    uint trans = AuthCli.FetchVaultNode(childID);
+                    RegisterAuthCB(trans, func, args);
                 }
-            }
-        }
-
-        private object[] ICreateArgArray(Callback cb, params object[] args) {
-            //Create the list of arguemnts
-            //End result
-            // - Method: ISomething([auth cb args], [custom args])
-            List<object> lArgs = new List<object>(args);
-            foreach (object arg in cb.fMyArgs)
-                lArgs.Add(arg);
-            return lArgs.ToArray();
-        }
-
-        private void IFireTransCallback(uint transID, params object[] args) {
-            if (fCallbacks.ContainsKey(transID)) {
-                Callback c = fCallbacks[transID];
-                fCallbacks.Remove(transID); //Delete it
-
-                object[] debug = ICreateArgArray(c, args);
-                BeginInvoke(c.fFunc, debug);
             }
         }
         #endregion
 
-        #region Auth Client Message Callbacks
-        private void IOnAuthException(Exception e) {
+        #region Auth Client Event Handlers
+        protected override void OnAuthException(Exception e) {
+            base.OnAuthException(e);
             Invoke(new Action<object, ThreadExceptionEventArgs>(Application_ThreadException), new object[] { null, new ThreadExceptionEventArgs(e) });
         }
 
-        private void IOnAuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages) {
-            //Fire callback
-            // - Method: ISomething(NetAgeInfo[] ages, ...)
-            IFireTransCallback(transID, new object[] { ages });
-        }
-
-        private void IOnAuthKickedOff(ENetError reason) {
+        protected override void OnAuthKickedOff(ENetError reason) {
+            base.OnAuthKickedOff(reason);
             Invoke(new Action<ENetError>(IKickedByAuth), new object[] { reason });
         }
 
-        private void IOnAuthPlayerInfo(uint transID, string name, uint idx, string shape, uint explorer) {
+        protected override void OnAuthPlayerInfo(uint transID, string name, uint idx, string shape, uint explorer) {
+            base.OnAuthPlayerInfo(transID, name, idx, shape, explorer);
             Invoke(new Action<string, uint>(IAddAvatar), new object[] { name, idx });
         }
 
-        private void IOnAuthPlayerSet(uint transID, ENetError result) {
-            fLog.Info(String.Format("Player Set [RESULT: {0}]", result.ToString().Substring(4)));
+        protected override void OnAuthPlayerSet(uint transID, ENetError result) {
+            base.OnAuthPlayerSet(transID, result);
+
+            LogInfo(String.Format("Player Set [RESULT: {0}]", result.ToString().Substring(4)));
             switch (result) {
                 case ENetError.kNetErrPlayerNotFound:
                     IShowError("Selected player not found!");
                     break;
                 case ENetError.kNetSuccess:
                     fActivePlayer = IGetPlayer().fID;
-                    fAuthCli.FetchVaultTree(fActivePlayer);
+                    AuthCli.FetchVaultTree(fActivePlayer);
                     break;
                 default:
                     IShowError("Unhandled Error Code: " + result.ToString().Substring(4));
                     break;
             }
         }
-        private void IOnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) {
+
+        protected override void OnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) {
+            base.OnAuthVaultNodeAdded(parentID, childID, saverID);
+
             if (fVaultTree.ContainsKey(parentID))
                 fVaultTree[parentID].Add(childID);
 
             //No TransID, so don't use IFireTransCallbacks
             if (fBaseNodes.ContainsValue(parentID))
-                BeginInvoke(new Action<uint, uint>(IAddToPanes), new object[] { parentID, childID });
+                FetchNode(childID, new Action<VaultNode, uint, uint>(IAddToPanes), new object[] { parentID, childID });
         }
-        
-        private void IOnAuthVaultNodeChanged(uint nodeID, Guid revUuid) {
+
+        protected override void OnAuthVaultNodeChanged(uint nodeID, Guid revUuid) {
+            base.OnAuthVaultNodeChanged(nodeID, revUuid);
+
             if (!fNodes.ContainsKey(nodeID)) return;
 
             //No TransID, so we will figure out what we need to update ourselves
             BeginInvoke(new Action<uint>(IUpdateNode), new object[] { nodeID });
         }
 
-        private void IOnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
+        protected override void OnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
+            base.OnAuthVaultNodeFetched(transID, result, data);
+
             VaultNode node = VaultNode.Parse(data);
             if (fNodes.ContainsKey(node.ID)) fNodes[node.ID] = node;
             else fNodes.Add(node.ID, node);
-
-            //Fire callback
-            // - Method: ISomething(VaultNode fetched);
-            IFireTransCallback(transID, new object[] { VaultNode.Parse(data) });
         }
 
-        private void IOnAuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs) {
-            //Simply fire the callback...
-            //We don't know what the caller wants these nodes for anyway...
-            // - Method: ISomething(uint[] nodeIDs)
-            IFireTransCallback(transID, new object[] { nodeIDs });
-        }
+        protected override void OnAuthVaultNodeRemoved(uint parentID, uint childID) {
+            base.OnAuthVaultNodeRemoved(parentID, childID);
 
-        private void IOnAuthVaultNodeRemoved(uint parentID, uint childID) {
             if (!fVaultTree.ContainsKey(parentID)) return;
             fVaultTree[parentID].Remove(childID);
 
             //No TransID, so we'll figure out what to do ourselves
-            BeginInvoke(new Action<uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
+            FetchNode(childID, new Action<VaultNode, uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
         }
 
-        private void IOnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
+        protected override void OnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
+            base.OnAuthVaultTreeFetched(transID, result, refs);
+
             foreach (VaultNodeRef nRef in refs) {
                 if (!fVaultTree.ContainsKey(nRef.fParentIdx))
                     fVaultTree.Add(nRef.fParentIdx, new List<uint>());
                 if (!fVaultTree[nRef.fParentIdx].Contains(nRef.fChildIdx)) {
-                    fLog.Debug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
+                    LogDebug(String.Format("NodeRef [PARENT: {0}] [CHILD: {1}] [SAVER: {2}]", nRef.fParentIdx, nRef.fChildIdx, nRef.fSaverIdx));
                     fVaultTree[nRef.fParentIdx].Add(nRef.fChildIdx);
                 }
 
                 //Is this a "core node" ?
-                if (nRef.fParentIdx == fActivePlayer) {
-                    uint trans = fAuthCli.FetchVaultNode(nRef.fChildIdx);
-                    fCallbacks.Add(trans, new Callback(new Action<VaultNode>(IAddFolderToPanes)));
-                }
+                if (nRef.fParentIdx == fActivePlayer)
+                    FetchNode(nRef.fChildIdx, new Action<VaultNode>(IAddFolderToPanes), new object[0]);
             }
         }
         #endregion
@@ -229,7 +186,17 @@ namespace MUd {
         }
 
         private void IConnect(object sender, EventArgs e) {
-            ConnectForm cf = new ConnectForm(fAuthCli, fLog, (sender == null));
+            ConnectForm cf = new ConnectForm();
+            if (Prefrences.RememberLogin) {
+                cf.AutoConnect = Prefrences.AutoConnect;
+                cf.CanAutoConnect = (sender == null ? true : false);
+                cf.Parent = this;
+                cf.Password = Prefrences.Password;
+                cf.RememberMe = true;
+                cf.Username = Prefrences.Username;
+                cf.WantShard = Prefrences.Shard;
+            }
+
             if (cf.ShowDialog(this) == DialogResult.OK) {
                 fConnectMenuItem.Enabled = false;
                 fDisconnectMenuItem.Enabled = true;
@@ -258,8 +225,8 @@ namespace MUd {
         }
 
         private void IDisconnect(object sender, EventArgs e) {
-            fLog.Info("Disconnected");
-            fAuthCli.Disconnect();
+            LogInfo("Disconnected");
+            AuthCli.Disconnect();
 
             IThrowAway();
             fAvatarSelector.Items.Clear();
@@ -295,7 +262,7 @@ namespace MUd {
         private void IAddBuddy(uint obj) {
             if (fBuddyCtrl.HasPlayer(obj)) {
                 MessageBox.Show(this, String.Format("KI #{0} is already in the Buddies List", obj), "Already Added", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                fLog.Warn(String.Format("Attempted to add #{0} to buddies list, but he is already there!", obj));
+                LogWarn(String.Format("Attempted to add #{0} to buddies list, but he is already there!", obj));
                 return;
             }
 
@@ -303,19 +270,18 @@ namespace MUd {
             search.PlayerID = obj;
 
             //Do the search
-            uint trans = fAuthCli.FindVaultNode(search.BaseNode.ToArray());
-            fCallbacks.Add(trans, new Callback(new Action<uint[], uint>(IAddBuddy), new object[] { obj }));
+            uint trans = AuthCli.FindVaultNode(search.BaseNode.ToArray());
+            RegisterAuthCB(trans, new Action<uint[], uint>(IAddBuddy), new object[] { obj });
         }
 
         private void IAddBuddy(uint[] nodeIDs, uint buddy) {
             if (nodeIDs.Length == 0) {
                 MessageBox.Show(this, String.Format("KI #{0} is not on the lattice", buddy), "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                fLog.Error(String.Format("Attempted to add buddy {0}, but he does not exist!", buddy));
+                LogError(String.Format("Attempted to add buddy {0}, but he does not exist!", buddy));
                 return;
             }
 
-            fAuthCli.AddVaultNode(fBaseNodes[EStandardNode.kBuddyListFolder], nodeIDs[0], fActivePlayer);
-            fLog.Info("Added a buddies");
+            AuthCli.AddVaultNode(fBaseNodes[EStandardNode.kBuddyListFolder], nodeIDs[0], fActivePlayer);
         }
 
         private void IAvatarSelected(object sender, EventArgs e) {
@@ -327,8 +293,8 @@ namespace MUd {
             IThrowAway();
 
             if (p.ToString() == "NULL") return;
-            fLog.Info(String.Format("Set Active Player [ID: {0}] [NAME: {1}]", p.fID.ToString(), p.fName));
-            fAuthCli.SetActivePlayer(p.fID);
+            LogInfo(String.Format("Set Active Player [ID: {0}] [NAME: {1}]", p.fID.ToString(), p.fName));
+            AuthCli.SetActivePlayer(p.fID);
             Prefrences.LastAvatar = p.fID;
         }
 
@@ -359,7 +325,7 @@ namespace MUd {
         private void ITabSelected(object sender, TabControlEventArgs e) {
             string tag = e.TabPage.Tag.ToString();
             if (e.Action == TabControlAction.Selecting) {
-                fLog.Info(String.Format("Selecting [TAB: {0}]", tag));
+                LogInfo(String.Format("Selecting [TAB: {0}]", tag));
                 return;
             } else if (e.Action != TabControlAction.Selected) return;
 
@@ -372,7 +338,7 @@ namespace MUd {
                     fNeighborsCtrl.SetFolder(fBaseNodes[EStandardNode.kHoodMembersFolder]);
 
             if (tag == "publicages")
-                if (fAuthCli.Connected) { //Don't fail ;)
+                if (AuthCli.Connected) { //Don't fail ;)
                     fPublicAgesCtrl.RefreshAgeList();
                     fAgeRefresh.Tick += new EventHandler(IRefreshAges);
                     fAgeRefresh.Interval = 300000; //Five minutes
@@ -388,11 +354,6 @@ namespace MUd {
         private void IAddAvatar(string name, uint idx) {
             Player p = new Player(name, idx);
             fAvatarSelector.Items.Add(p);
-        }
-
-        private void IAddToPanes(uint parentID, uint childID) {
-            Callback cb = new Callback(new Action<VaultNode, uint, uint>(IAddToPanes), new object[] { parentID, childID });
-            FetchNode(childID, cb); //See IAddToPanes
         }
 
         private void IAddToPanes(VaultNode node, uint parentID, uint childID) {
@@ -423,24 +384,20 @@ namespace MUd {
             if (node.NodeType == ENodeType.kNodeAgeInfoList) {
                 VaultAgeInfoListNode ages = new VaultAgeInfoListNode(node);
                 if (ages.FolderType == EStandardNode.kAgesIOwnFolder) {
-                    Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
-                    FetchChildren(node.ID, cb);
+                    FetchChildren(node.ID, new Action<VaultNode>(IAddFolderToPanes));
                 }
             }
 
             //Grab the AgeInfo...
-            if (node.NodeType == ENodeType.kNodeAgeLink) {
-                Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
-                FetchChildren(node.ID, cb);
-            }
+            if (node.NodeType == ENodeType.kNodeAgeLink)
+                FetchChildren(node.ID, new Action<VaultNode>(IAddFolderToPanes));
 
             //See if this is the neighborhood
             if (node.NodeType == ENodeType.kNodeAgeInfo) {
                 VaultAgeInfoNode ageinfo = new VaultAgeInfoNode(node);
                 if (ageinfo.Filename == "Neighborhood") {
                     //Yep! Grab children :)
-                    Callback cb = new Callback(new Action<VaultNode>(IAddFolderToPanes));
-                    FetchChildren(node.ID, cb);
+                    FetchChildren(node.ID, new Action<VaultNode>(IAddFolderToPanes));
                 }
             }
 
@@ -482,7 +439,7 @@ namespace MUd {
         private void IKickedByAuth(ENetError reason) {
             //Get the enum name of the reason
             string temp = reason.ToString().Substring(4);
-            fLog.Error(String.Format("KICKED OFF [REASON: {0}]", temp));
+            LogError(String.Format("KICKED OFF [REASON: {0}]", temp));
 
             //Try to find a prettier reason, but fall back on the ugly one...
             string display = String.Format("UKNOWN REASON [{0}]", temp);
@@ -510,11 +467,6 @@ namespace MUd {
                 fPublicAgesCtrl.RefreshAgeList();
         }
 
-        private void IRemoveFromPanes(uint parentID, uint childID) {
-            Callback cb = new Callback(new Action<VaultNode, uint, uint>(IRemoveFromPanes), new object[] { parentID, childID });
-            FetchNode(childID, cb); //See IRemoveFromPanes
-        }
-
         private void IRemoveFromPanes(VaultNode node, uint parentID, uint childID) {
             if (fBaseNodes[EStandardNode.kBuddyListFolder] == parentID)
                 fBuddyCtrl.RemoveNode(node);
@@ -540,13 +492,13 @@ namespace MUd {
 
             fBuddyCtrl.Clear();
             fNeighborsCtrl.Clear();
+            fPublicAgesCtrl.Clear();
             fRecentsCtrl.Clear();
         }
 
         private void IUpdateNode(uint idx) {
-            Callback cb = new Callback(new Action<VaultNode>(IUpdateNode));
-            uint trans = fAuthCli.FetchVaultNode(idx);
-            fCallbacks.Add(trans, cb);
+            uint trans = AuthCli.FetchVaultNode(idx);
+            RegisterAuthCB(trans, new Action<VaultNode>(IUpdateNode));
         }
 
         private void IUpdateNode(VaultNode node) {

@@ -55,6 +55,7 @@ namespace MUd {
         Dictionary<uint, string> fTransToName = new Dictionary<uint, string>();
         Dictionary<uint, byte[]> fDownloads = new Dictionary<uint, byte[]>();
 
+        ManualResetEvent fChgHack = new ManualResetEvent(false);
         uint fSrvChallenge;
         public uint Challenge {
             get { return fSrvChallenge; }
@@ -91,6 +92,8 @@ namespace MUd {
             fStream.FlushWriter();
 
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
+            fChgHack.WaitOne();
+
             return true;
         }
 
@@ -401,6 +404,7 @@ namespace MUd {
             Auth_RegisterReply reply = new Auth_RegisterReply();
             reply.Read(fStream);
             fSrvChallenge = reply.fChallenge;
+            fChgHack.Set();
             if (ClientRegistered != null)
                 ClientRegistered(reply.fChallenge);
         }

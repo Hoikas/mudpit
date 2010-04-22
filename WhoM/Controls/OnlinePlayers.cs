@@ -39,6 +39,12 @@ namespace MUd {
             string age = (info.Online ? IGetAgeName(info) : String.Empty);
             fDataGridView.Rows.Add(new object[] { img, info.PlayerID, info.PlayerName, age });
             fPlayerToInfo.Add(info.PlayerID, info.BaseNode.ID);
+
+            //Sort... If no default, use online status
+            if (fDataGridView.SortedColumn != null)
+                fDataGridView.Sort(fDataGridView.SortedColumn, (fDataGridView.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending));
+            else
+                fDataGridView.Sort(fOnline, ListSortDirection.Descending);
         }
 
         public void Clear() {
@@ -49,21 +55,21 @@ namespace MUd {
 
         private void IDelayedAgeName(uint[] matches, VaultPlayerInfoNode info) {
             if (matches.Length == 1) {
-                Callback cb = new Callback(new Action<VaultNode, VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
-                uint trans = fParent.fAuthCli.FetchVaultNode(matches[0]);
-                fParent.fCallbacks.Add(trans, cb);
+                uint trans = fParent.AuthCli.FetchVaultNode(matches[0]);
+                fParent.RegisterAuthCB(trans, new Action<VaultNode, VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
             } else
-                fParent.fLog.Warn(String.Format("Got {0} AgeInfos!", matches.Length)); 
+                fParent.LogWarn(String.Format("Got {0} AgeInfos!", matches.Length)); 
         }
 
         private void IDelayedAgeName(VaultNode node, VaultPlayerInfoNode info) {
             VaultAgeInfoNode age = new VaultAgeInfoNode(node);
 
             string name = String.Empty;
-            if (age.Description != String.Empty)
-                name = age.Description;
-            else
+            if (age.Description == String.Empty)
                 name = String.Format("{0} ({1}) {2}", age.UserDefinedName, age.SequenceNumber, age.InstanceName);
+            else
+                name = age.Description;
+                
 
             //Find the player's row
             int idx = -1;
@@ -85,9 +91,8 @@ namespace MUd {
                 search.InstanceUUID = info.AgeInstanceUUID;
                 
                 //Do the search
-                Callback cb = new Callback(new Action<uint[], VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
-                uint trans = fParent.fAuthCli.FindVaultNode(search.BaseNode.ToArray());
-                fParent.fCallbacks.Add(trans, cb);
+                uint trans = fParent.AuthCli.FindVaultNode(search.BaseNode.ToArray());
+                fParent.RegisterAuthCB(trans, new Action<uint[], VaultPlayerInfoNode>(IDelayedAgeName), new object[] { info });
             }
 
             if (info.AgeInstanceName == "AhnonayCathedral")
@@ -144,8 +149,7 @@ namespace MUd {
             fInitialized = true;
             fBaseNode = folder;
 
-            Callback cb = new Callback(new Action<VaultNode>(AddPlayerInfo));
-            fParent.FetchChildren(folder, cb);
+            fParent.FetchChildren(folder, new Action<VaultNode>(AddPlayerInfo));
         }
         
         private void IOnGridSort(object sender, DataGridViewSortCompareEventArgs e) {
@@ -201,8 +205,12 @@ namespace MUd {
             //Update and stuff
             fDataGridView.UpdateCellValue(0, idx);
             fDataGridView.UpdateCellValue(3, idx);
+            
+            //Sort... If no default, use online status
             if (fDataGridView.SortedColumn != null)
                 fDataGridView.Sort(fDataGridView.SortedColumn, (fDataGridView.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending));
+            else
+                fDataGridView.Sort(fOnline, ListSortDirection.Descending);
 
             return retval;
         }
@@ -268,8 +276,8 @@ namespace MUd {
                 uint playerID = Convert.ToUInt32(row.Cells[1].Value);
                 uint info = fPlayerToInfo[playerID];
 
-                fParent.fLog.Info(String.Format("Removed node [ID: {0}]", info));
-                fParent.fAuthCli.RemoveVaultNode(fBaseNode, info);
+                fParent.LogInfo(String.Format("Removed node [ID: {0}]", info));
+                fParent.AuthCli.RemoveVaultNode(fBaseNode, info);
             }
         }
     }

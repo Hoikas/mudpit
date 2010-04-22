@@ -22,6 +22,10 @@ namespace MUd {
             InitializeComponent();
         }
 
+        public void Clear() {
+            fDataGridView.Rows.Clear();
+        }
+
         public bool RefreshAgeList() {
             //Only allow ONE refresh per minute!!!
 #if !DEBUG
@@ -69,9 +73,12 @@ namespace MUd {
                 }
             }
 
-            //Resort, if needed.
+            //Resort based on user prefs
+            //If no pref, sort by age instance name
             if (fDataGridView.SortedColumn != null)
                 fDataGridView.Sort(fDataGridView.SortedColumn, (fDataGridView.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending));
+            else
+                fDataGridView.Sort(fAgeInstance, ListSortDirection.Ascending);
         }
 
         private string IMakeDescription(NetAgeInfo nai) {
@@ -93,14 +100,14 @@ namespace MUd {
         }
 
         private void IRefreshLinkClicked(object sender, LinkLabelLinkClickedEventArgs e) {
+            if (!fParent.AuthCli.Connected) return; //Thou Shalt Not...
             if (!RefreshAgeList())
                 MessageBox.Show("You must wait one minute between refreshes.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void IRequestAges(string filename) {
-            Callback cb = new Callback(new Action<NetAgeInfo[]>(IGotAges));
-            uint trans = fParent.fAuthCli.GetPublicAges(filename);
-            fParent.fCallbacks.Add(trans, cb);
+            uint trans = fParent.AuthCli.GetPublicAges(filename);
+            fParent.RegisterAuthCB(trans, new Action<NetAgeInfo[]>(IGotAges));
         }
     }
 }
