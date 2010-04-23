@@ -79,13 +79,7 @@ namespace MUd {
             fGateCli.GotFileSrvIP += new GateIP(OnGateGotFileSrvIP);
         }
 
-        protected void RegisterExceptionHandler() {
-            fAuthCli.ExceptionHandler +=new ExceptionArgs(OnAuthException);
-        }
-
         #region AuthCli Event Handlers
-        protected virtual void OnAuthException(Exception e) { }
-
         protected virtual void OnAuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages) {
             //Fire callback
             // - Method: ISomething(NetAgeInfo[] ages, ...)

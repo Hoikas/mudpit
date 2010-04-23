@@ -108,8 +108,7 @@ namespace MUd {
             Stream s = resp.GetResponseStream();
             ShardList list = ShardList.Create(s);
             Invoke(new Action<Shard[]>(IInvokedUpdate), new object[] { list.fShards });
-
-            //TODO: Cache!
+            list.Serialize("shards.xml");
         }
 
         private void IGrabShardList() {

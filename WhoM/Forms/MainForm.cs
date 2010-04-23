@@ -47,7 +47,7 @@ namespace MUd {
             fRecentsCtrl.Parent = this;
 
 #if !DEBUG
-            RegisterExceptionHandler();
+            AuthCli.ExceptionHandler +=new ExceptionArgs(IOnAuthException);
 #endif
 
             //Are we running Mono?
@@ -90,8 +90,7 @@ namespace MUd {
         #endregion
 
         #region Auth Client Event Handlers
-        protected override void OnAuthException(Exception e) {
-            base.OnAuthException(e);
+        private void IOnAuthException(Exception e) {
             Invoke(new Action<object, ThreadExceptionEventArgs>(Application_ThreadException), new object[] { null, new ThreadExceptionEventArgs(e) });
         }
 

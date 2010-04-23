@@ -19,6 +19,13 @@ namespace MUd {
             XmlSerializer serializer = new XmlSerializer(typeof(ShardList));
             return serializer.Deserialize(reader) as ShardList;
         }
+
+        public void Serialize(string file) {
+            StreamWriter writer = new StreamWriter(file, false);
+            XmlSerializer serializer = new XmlSerializer(typeof(ShardList));
+            serializer.Serialize(writer, this);
+            writer.Close();
+        }
     }
 
     public class Shard {

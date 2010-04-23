@@ -57,6 +57,7 @@ namespace MUd {
         private void IGotAges(NetAgeInfo[] ages, string filename) {
             if (ages.Length == 0) {
                 //Arrrrr! We're pirates.
+                //But seriously, HACK HACK HACK MOULa if there are no GPs or K'veers
                 if (filename.Contains("GuildPub") || filename.Equals("Kveer"))
                     ITryToHackGpKveer(filename);
                 return;
@@ -76,15 +77,28 @@ namespace MUd {
                 //If not found (index == -1), then create a row
                 //Otherwise, update old row
                 if (index == -1) {
+                    //If this is a Neighborhood...
+                    //AND fCurrPopulation is zero, then DON'T ADD!
+                    //Let's not junkify the list ;)
+                    if (nai.fFilename.Equals("Neighborhood") && nai.fCurrPopulation == 0)
+                        continue;
+
                     DataGridViewRow r = new DataGridViewRow();
                     r.CreateCells(fDataGridView, new object[] { IMakeInstance(nai), IMakeDescription(nai), nai.fCurrPopulation, "View Details" });
                     r.Tag = nai;
 
                     fDataGridView.Rows.Add(r);
                 } else {
-                    fDataGridView.Rows[index].Cells[0].Value = IMakeInstance(nai);
-                    fDataGridView.Rows[index].Cells[1].Value = IMakeDescription(nai);
-                    fDataGridView.Rows[index].Cells[2].Value = nai.fCurrPopulation;
+                    //If this is a Neighborhood...
+                    //AND fCurrPopulation is zero, then DELETE!
+                    //Otherwise, update as usual...
+                    if (nai.fFilename.Equals("Neighborhood") && nai.fCurrPopulation == 0)
+                        fDataGridView.Rows.RemoveAt(index);
+                    else {
+                        fDataGridView.Rows[index].Cells[0].Value = IMakeInstance(nai);
+                        fDataGridView.Rows[index].Cells[1].Value = IMakeDescription(nai);
+                        fDataGridView.Rows[index].Cells[2].Value = nai.fCurrPopulation;
+                    }
                 }
             }
 
