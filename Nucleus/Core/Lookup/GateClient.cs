@@ -28,7 +28,7 @@ namespace MUd {
             s.Close();
 
             //Init encryption
-            if (!base.NetCliConnect())
+            if (!base.NetCliConnect(4))
                 return false;
 
             Ping((uint)DateTime.UtcNow.Ticks, Encoding.UTF8.GetBytes("Hello, Mr. GateKeeper!"));

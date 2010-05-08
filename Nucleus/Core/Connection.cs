@@ -110,11 +110,11 @@ namespace MUd {
             fHeader.fType = type;
         }
 
-        protected bool NetCliConnect() {
+        protected bool NetCliConnect(int g) {
             UruStream s = new UruStream(new NetworkStream(fSocket, false));
 
             //NetCliConnect
-            ISetupKeys();
+            ISetupKeys(g);
             s.BufferWriter();
             s.WriteByte((byte)NetCliConnectMsg.kNetCliConnect);
             s.WriteByte(66);
@@ -144,14 +144,14 @@ namespace MUd {
             fStream = new UruStream(new CryptoNetStream(key, fSocket));
         }
 
-        private bool ISetupKeys() {
+        private bool ISetupKeys(int g) {
             BigNum b = BigNum.Random(512);
             BigNum N = new BigNum(fN);
             BigNum X = new BigNum(fX);
 
             //Calculate seeds
             BigNum client_seed = X.PowMod(b, N);
-            BigNum server_seed = new BigNum(4).PowMod(b, N);
+            BigNum server_seed = new BigNum(g).PowMod(b, N);
 
             //Dump data
             fDhData = server_seed.ToArray();
