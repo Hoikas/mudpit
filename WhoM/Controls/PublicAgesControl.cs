@@ -84,7 +84,7 @@ namespace MUd {
                         continue;
 
                     DataGridViewRow r = new DataGridViewRow();
-                    r.CreateCells(fDataGridView, new object[] { IMakeInstance(nai), IMakeDescription(nai), nai.fCurrPopulation, "View Details" });
+                    r.CreateCells(fDataGridView, new object[] { IMakeInstance(nai), IMakeDescription(nai), nai.fCurrPopulation });
                     r.Tag = nai;
 
                     fDataGridView.Rows.Add(r);

@@ -59,6 +59,15 @@ namespace MUd {
 
         }
 
+        public static Guid GetGuid(string key) {
+            if (!fInitialized) IReadConfig();
+            if (fConfig.ContainsKey(key)) {
+                return new Guid(fConfig[key]);
+            } else {
+                return Guid.Empty;
+            }
+        }
+
         public static int GetInteger(string key, int def) {
             if (!fInitialized) IReadConfig();
             if (fConfig.ContainsKey(key))

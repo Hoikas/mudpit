@@ -1,0 +1,19 @@
+﻿Myst Online: Uru Live
+Branch 1 Build 889 - 893
+
+Encryption Key Positions
+For use with KeyGen.exe
+
+------ UruExplorer.exe ------
+Auth N: 0x63B978
+     X: 0x63B9B8
+
+Game N: 0x63C4C8
+     X: 0x63C508
+
+Gate N: 0x63C7F0
+     X: 0x63C830
+
+------ UruLauncher.exe ------
+Gate N: 0x5E398
+     X: 0x5E3D8

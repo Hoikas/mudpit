@@ -33,7 +33,7 @@ namespace MUd {
         }
 
         const int kAuthHeaderSize = 20;
-        byte[] fServerSeed = new byte[] { 0x4F, 0x17, 0xC8, 0x19, 0x3D, 0x08, 0xF3 };
+
 
         Dictionary<uint, Queue<Chunk>> fQueuedChunks = new Dictionary<uint, Queue<Chunk>>();
         Dictionary<uint, uint> fFileSizes = new Dictionary<uint, uint>();
@@ -46,7 +46,6 @@ namespace MUd {
         bool fLoggedIn = false;
 
         AuthServer fParent;
-        UruStream fStream;
         VaultClient fVaultCli;
         DbConnection fDB;
 
@@ -54,7 +53,12 @@ namespace MUd {
             : base(s, hdr, log) {
             fParent = parent;
 
-            fVaultCli = new VaultClient(fLog);
+            fVaultCli = new VaultClient();
+            fVaultCli.Host = Configuration.GetString("vault_addr", "127.0.0.1");
+            fVaultCli.Port = Configuration.GetInteger("vault_port", 14617);
+            fVaultCli.ProductID = Configuration.GetGuid("auth_guid");
+            fVaultCli.Token = Configuration.GetGuid("vault_token");
+
             fVaultCli.AgeCreated += new VaultAgeCreated(IVaultOnAgeCreated);
             fVaultCli.NodeAdded += new VaultNodeAdded(IVaultOnNodeAdded);
             fVaultCli.NodeAddReply += new VaultResult(IVaultOnNodeAddReply);
@@ -71,6 +75,7 @@ namespace MUd {
                 fDB = Database.Connect();
             } catch (DbException) {
                 Error("Failed to connect to DATABASE...");
+                IKickClient(ENetError.kNetErrInternalError);
             }
         }
 
@@ -100,7 +105,7 @@ namespace MUd {
             }
 
             //Handoff
-            if (!ISetupUruEncryption(y_data)) {
+            if (!ISetupEncryption("Auth", y_data)) {
                 Error("Cannot setup encryption keys!");
                 Stop();
                 return;
@@ -124,47 +129,6 @@ namespace MUd {
             //Begin receiving data
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceiveFromUru), null);
             s.Close();
-        }
-
-        private bool ISetupUruEncryption(byte[] y_data) {
-            string dir = Configuration.GetString("enc_keys", "G:\\Plasma\\Servers\\Encryption Keys");
-            string priv = Path.Combine(dir, "Auth_Private.key");
-            string pub = Path.Combine(dir, "Auth_Public.key");
-
-            //Test for keys
-            if (!File.Exists(pub) || !File.Exists(priv))
-                return false;
-
-            BigNum Y = new BigNum(y_data);
-            byte[] data = new byte[64];
-
-            FileStream fs = new FileStream(priv, FileMode.Open, FileAccess.Read);
-            fs.Read(data, 0, 64);
-            fs.Close();
-            BigNum K = new BigNum(data);
-
-            fs = new FileStream(pub, FileMode.Open, FileAccess.Read);
-            fs.Read(data, 0, 64);
-            fs.Close();
-            BigNum N = new BigNum(data);
-
-            BigNum client_seed = Y.PowMod(K, N);
-            byte[] seed_data = client_seed.ToArray();
-            byte[] key = new byte[7];
-
-            fServerSeed = RNG.Random(7);
-            for (int i = 0; i < key.Length; i++) {
-                if (i >= seed_data.Length) key[i] = fServerSeed[i];
-                else key[i] = (byte)(seed_data[i] ^ fServerSeed[i]);
-            }
-
-            fStream = new UruStream(new CryptoNetStream(key, fSocket));
-
-            K.Dispose();
-            N.Dispose();
-            client_seed.Dispose();
-
-            return true;
         }
 
         private ENetError ICanDoStuff() {
@@ -355,68 +319,77 @@ namespace MUd {
             Auth_LoginRequest req = new Auth_LoginRequest();
             req.Read(fStream);
 
-            StringBuilder sb = new StringBuilder(req.fHash.UruHash.Length * 4);
-            foreach (uint b in req.fHash.UruHash)
-                sb.AppendFormat("{0:x8}", b);
-            string hash = sb.ToString();
-            Info(String.Format("Login Attempt! [OS: {0}] [USER: {1}] [HASH: {2}]", req.fOS, req.fAccount, hash));
-
-            SelectStatement sel = new SelectStatement();
-            sel.Limit = 1;
-            sel.Table = "Accounts";
-            sel.Where.Add("Name", req.fAccount);
-            sel.Wildcard = true;
-
-            MySqlDataReader r = sel.ExecuteQuery(fDB);
             ENetError err = ENetError.kNetPending;
-            if (r.Read()) {
-                if ((AcctPrivLevel)r.GetByte("PrivLevel") == AcctPrivLevel.Banned) {
-                    err = ENetError.kNetErrAccountBanned;
-                    Warn("Login Failed: Account Banned.");
-                } else if ((int)r.GetByte("PrivLevel") < Configuration.GetEnumInteger("restrict_login", AcctPrivLevel.Normal, typeof(AcctPrivLevel))) {
-                    err = ENetError.kNetErrLoginDenied;
-                    Warn("Login Failed: PrivLevel too low.");
-                } else if (hash.ToLower() == r.GetString("HashedPassword").ToLower()) {
-                    err = ENetError.kNetSuccess;
-                    Info("Login success!");
+            if (!fVaultCli.Connected) {
+                if (fVaultCli.Connect()) {
+                    Debug("Connection to vault established!");
                 } else {
-                    err = ENetError.kNetErrAuthenticationFailed;
-                    Warn("Login Failed: Invalid password.");
+                    Error("Couldn't connect to VAULT...");
+                    err = ENetError.kNetErrInternalError;
                 }
-            } else {
-                err = ENetError.kNetErrAccountNotFound;
-                Warn("Login Failed: Account not found.");
             }
 
-            if (err == ENetError.kNetPending)
-                err = ENetError.kNetErrInternalError;
-            else if (err == ENetError.kNetSuccess) {
-                fLoggedIn = true;
-                fDroidKey[0] = Configuration.GetUInteger("data_key01", 0x47612f39);
-                fDroidKey[1] = Configuration.GetUInteger("data_key02", 0x417a2cbf);
-                fDroidKey[2] = Configuration.GetUInteger("data_key03", 0x882941c2);
-                fDroidKey[3] = Configuration.GetUInteger("data_key04", 0x301d4c9a);
+            if (err == ENetError.kNetPending) {
+                StringBuilder sb = new StringBuilder(req.fHash.UruHash.Length * 4);
+                foreach (uint b in req.fHash.UruHash)
+                    sb.AppendFormat("{0:x8}", b);
+                string hash = sb.ToString();
+                Info(String.Format("Login Attempt! [OS: {0}] [USER: {1}] [HASH: {2}]", req.fOS, req.fAccount, hash));
+
+                SelectStatement sel = new SelectStatement();
+                sel.Limit = 1;
+                sel.Table = "Accounts";
+                sel.Where.Add("Name", req.fAccount);
+                sel.Wildcard = true;
+
+                MySqlDataReader r = sel.ExecuteQuery(fDB);
+                if (r.Read()) {
+                    if ((AcctPrivLevel)r.GetByte("PrivLevel") == AcctPrivLevel.Banned) {
+                        err = ENetError.kNetErrAccountBanned;
+                        Warn("Login Failed: Account Banned.");
+                    } else if ((int)r.GetByte("PrivLevel") < Configuration.GetEnumInteger("restrict_login", AcctPrivLevel.Normal, typeof(AcctPrivLevel))) {
+                        err = ENetError.kNetErrLoginDenied;
+                        Warn("Login Failed: PrivLevel too low.");
+                    } else if (hash.ToLower() == r.GetString("HashedPassword").ToLower()) {
+                        err = ENetError.kNetSuccess;
+                        fAcctUUID = new Guid(r.GetString("AcctUUID"));
+                        Info("Login success!");
+                    } else {
+                        err = ENetError.kNetErrAuthenticationFailed;
+                        Warn("Login Failed: Invalid password.");
+                    }
+                } else {
+                    err = ENetError.kNetErrAccountNotFound;
+                    Warn("Login Failed: Account not found.");
+                }
+
+                if (err == ENetError.kNetSuccess) {
+                    fLoggedIn = true;
+                    fDroidKey[0] = Configuration.GetUInteger("data_key01", 0x47612f39);
+                    fDroidKey[1] = Configuration.GetUInteger("data_key02", 0x417a2cbf);
+                    fDroidKey[2] = Configuration.GetUInteger("data_key03", 0x882941c2);
+                    fDroidKey[3] = Configuration.GetUInteger("data_key04", 0x301d4c9a);
+                }
+
+                r.Close();
             }
 
             Auth_LoginReply reply = new Auth_LoginReply();
-            if (err == ENetError.kNetSuccess) reply.fAcctGuid = new Guid(r.GetString("AcctUUID"));
+            if (err == ENetError.kNetSuccess) reply.fAcctGuid = fAcctUUID;
             reply.fBillingType = 1;
             reply.fDroidKey = fDroidKey;
             reply.fFlags = 0;
             reply.fResult = err;
             reply.fTransID = req.fTransID;
-            r.Close();
 
             if (err == ENetError.kNetSuccess) {
-                fAcctUUID = reply.fAcctGuid;
-
-                sel = new SelectStatement();
+                SelectStatement sel = new SelectStatement();
                 sel.Limit = 5;
                 sel.Table = "Players";
-                sel.Where.Add("AcctUUID", reply.fAcctGuid.ToString().ToLower());
+                sel.Where.Add("AcctUUID", fAcctUUID.ToString().ToLower());
                 sel.Wildcard = true;
 
-                r = sel.ExecuteQuery(fDB);
+                MySqlDataReader r = sel.ExecuteQuery(fDB);
                 while (r.Read()) {
                     Auth_PlayerInfo player = new Auth_PlayerInfo();
                     player.fExplorer = 1;
@@ -462,20 +435,6 @@ namespace MUd {
 
             Auth_RegisterReply reply = new Auth_RegisterReply();
             reply.fChallenge = fChallenge;
-
-            //Connect to the vault
-            if (!fVaultCli.Connected) {
-                if (fVaultCli.Connect(Configuration.GetString("vault_addr", "127.0.0.1"), Configuration.GetInteger("vault_port", 14617))) {
-                    fVaultCli.Start();
-                    Debug("Connection to vault established!");
-                } else {
-                    IKickClient(ENetError.kNetErrInternalError);
-                    return;
-                }
-            }
-
-            //Still here?
-            fVaultCli.Ping((uint)DateTime.UtcNow.Ticks, null);
             fChallenge = BitConverter.ToUInt32(RNG.Random(4), 0);
 
             //Actually send reply
@@ -798,7 +757,7 @@ namespace MUd {
 
         public override void Stop() {
             if (fStream != null) fStream.Close();
-            fVaultCli.Stop();
+            fVaultCli.Disconnect();
             fSocket.Close();
             fParent.Remove(this);
         }

@@ -33,7 +33,7 @@ namespace MUd {
         LogClientDebuggerConnect, ScoreCreate,
         ScoreDelete, ScoreGetScores, ScoreAddPoints,
         ScoreTransferPoints, ScoreSetPoints,
-        ScoreGetRanks,
+        ScoreGetRanks, AcctExistsRequest,
     }
 
     public enum AuthSrv2Cli {
@@ -58,7 +58,7 @@ namespace MUd {
         ScoreCreateReply, ScoreDeleteReply,
         ScoreGetScoresReply, ScoreAddPointsReply,
         ScoreTransferPointsReply, ScoreSetPointsReply,
-        ScoreGetRanksReply,
+        ScoreGetRanksReply, AcctExistsReply,
     }
 
     public struct Auth_AgeReply {
@@ -787,10 +787,9 @@ namespace MUd {
             fResult = (ENetError)s.ReadInt();
             fRefs = new VaultNodeRef[s.ReadInt()];
             
-            UruStream buf = s.ReadBuffer(13 * fRefs.Length);
             for (int i = 0; i < fRefs.Length; i++) {
                 fRefs[i] = new VaultNodeRef();
-                fRefs[i].Read(buf);
+                fRefs[i].Read(s);
             }
         }
 

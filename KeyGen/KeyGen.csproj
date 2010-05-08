@@ -49,14 +49,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj">
-      <Project>{01BD2A1D-C41D-4EEC-80E9-C75A1D29CC33}</Project>
-      <Name>Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\OpenSSL\OpenSSL.csproj">
       <Project>{8474D033-F77C-4364-A571-0218CDB56575}</Project>
       <Name>OpenSSL</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="KeyPos.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

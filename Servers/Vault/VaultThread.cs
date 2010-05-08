@@ -64,7 +64,7 @@ namespace MUd {
             int size = s.ReadInt();
             if (size != kVaultHeaderSize) Warn("Invalid auth header size!");
             Guid token = new Guid(s.ReadBytes(size - 4));
-            Guid expect = new Guid(Configuration.GetString("vault_token", Guid.Empty.ToString()));
+            Guid expect = Configuration.GetGuid("vault_token");
             if (token != expect) {
                 Error("Vault Token invalid. S-T-R-I-K-E!");
                 Stop();

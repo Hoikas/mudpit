@@ -41,16 +41,14 @@ namespace MUd {
         public void Add(Socket c, ConnectHeader hdr) {
             AuthThread ft = new AuthThread(this, c, hdr, fLog);
             ft.Start();
-
-            Monitor.Enter(fClients);
-            fClients.Add(ft);
-            Monitor.Exit(fClients);
+            
+            lock (fClients)
+                fClients.Add(ft);
         }
 
         public void Remove(AuthThread ft) {
-            Monitor.Enter(fClients);
-            fClients.Remove(ft);
-            Monitor.Exit(fClients);
+            lock (fClients)
+                fClients.Remove(ft);
         }
     }
 }

@@ -8,10 +8,12 @@ using System.Threading;
 
 namespace MUd {
     public delegate void GameAgeJoined(ENetError result);
+    public delegate void GameRawBuffer(CreatableID pCre, byte[] buf, bool handled);
 
     public class GameClient : Cli2SrvBase {
 
         public event GameAgeJoined AgeJoined;
+        public event GameRawBuffer BufferPropagated;
 
         private Guid fAcctUuid;
         public Guid AccountUUID {
@@ -55,24 +57,41 @@ namespace MUd {
             s.Close();
 
             //Init encryption
-            if (!base.NetCliConnect())
+            if (!base.NetCliConnect(73))
                 return false;
 
-            //Only allow us to join one age per conneciton.
+            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
+            return true;
+        }
+
+        public uint JoinAge() {
             Game_JoinAgeRequest req = new Game_JoinAgeRequest();
             req.fAcctUuid = fAcctUuid;
             req.fAgeMcpID = fMcpID;
             req.fPlayerID = fPlayerID;
             req.fTransID = IGetTransID();
 
-            //Send the JAR (Note: this is not Java...)
-            fStream.BufferWriter();
-            fStream.WriteUShort((ushort)GameCli2Srv.JoinAgeRequest);
-            req.Write(fStream);
-            fStream.FlushWriter();
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)GameCli2Srv.JoinAgeRequest);
+                req.Write(fStream);
+                fStream.FlushWriter();
+            }
 
-            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
-            return true;
+            return req.fTransID;
+        }
+
+        public void PropagateBuffer(CreatableID pCre, byte[] buf) {
+            Game_PropagateBuffer buffer = new Game_PropagateBuffer();
+            buffer.fBuffer = buf;
+            buffer.fMsgType = pCre;
+
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)GameCli2Srv.PropagateBuffer);
+                buffer.Write(fStream);
+                fStream.FlushWriter();
+            }
         }
 
         private void IReceive(IAsyncResult ar) {
@@ -83,6 +102,9 @@ namespace MUd {
                     switch (msg) {
                         case GameSrv2Cli.JoinAgeReply:
                             IJoinAgeReply();
+                            break;
+                        case GameSrv2Cli.PropagateBuffer:
+                            IPropagateBuffer();
                             break;
                         default:
                             string test = Enum.GetName(typeof(GameSrv2Cli), msg);
@@ -105,6 +127,18 @@ namespace MUd {
             reply.Read(fStream);
             if (AgeJoined != null)
                 AgeJoined(reply.fResult);
+        }
+
+        private void IPropagateBuffer() {
+            Game_PropagateBuffer buffer = new Game_PropagateBuffer();
+            buffer.Read(fStream);
+
+            bool handled = false;
+            //TODO: Handle specific NetMessages
+            //      Later....
+
+            if (BufferPropagated != null)
+                BufferPropagated(buffer.fMsgType, buffer.fBuffer, handled);
         }
     }
 }

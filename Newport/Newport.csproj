@@ -51,6 +51,10 @@
       <Project>{01BD2A1D-C41D-4EEC-80E9-C75A1D29CC33}</Project>
       <Name>Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\OpenSSL\OpenSSL.csproj">
+      <Project>{8474D033-F77C-4364-A571-0218CDB56575}</Project>
+      <Name>OpenSSL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Servers\Servers.csproj">
       <Project>{236FE675-92FE-4A73-85AB-9A91DBF30190}</Project>
       <Name>Servers</Name>

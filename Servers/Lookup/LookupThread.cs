@@ -19,6 +19,45 @@ namespace MUd {
             fConnType = type;
         }
 
+        public override void Start() {
+            UruStream s = new UruStream(new NetworkStream(fSocket, false));
+
+            //NetCliConnect
+            byte[] y_data = null;
+            if (s.ReadByte() != (byte)NetCliConnectMsg.kNetCliConnect) {
+                Error("FATAL: Invalid NetCliConnect");
+                Stop();
+            } else {
+                int size = (int)s.ReadByte();
+                y_data = s.ReadBytes(size - 2);
+
+                if (y_data.Length > 64) {
+                    Warn("YData too big. Truncating.");
+                    byte[] old = y_data;
+                    y_data = new byte[64];
+                    Buffer.BlockCopy(old, 0, y_data, 0, 64);
+                }
+            }
+
+            //Handoff
+            if (!ISetupEncryption("Master", y_data)) {
+                Error("Cannot setup encryption keys!");
+                Stop();
+                return;
+            }
+
+            //Send the NetCliEncrypt response
+            s.BufferWriter();
+            s.WriteByte((byte)NetCliConnectMsg.kNetCliEncrypt);
+            s.WriteByte(9);
+            s.WriteBytes(fServerSeed);
+            s.FlushWriter();
+
+            //Begin receiving data
+            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(Receive), null);
+            s.Close();
+        }
+
         protected override void Receive(IAsyncResult ar) {
             try {
                 fSocket.EndReceive(ar);

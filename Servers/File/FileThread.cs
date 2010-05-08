@@ -75,6 +75,8 @@ namespace MUd {
             } catch (IOException) {
                 Debug("Disconnected");
                 Stop();
+            } catch (ObjectDisposedException) {
+                Debug("Disconnected");
             }
         }
 

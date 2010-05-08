@@ -78,7 +78,7 @@ namespace MUd {
             s.Close();
 
             //Init encryption
-            if(!base.NetCliConnect())
+            if(!base.NetCliConnect(41))
                 return false;
 
             //Register the client...

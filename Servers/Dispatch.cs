@@ -34,71 +34,81 @@ namespace MUd {
         }
 
         public void Run() {
-            Guid auth_guid = new Guid(Configuration.GetString("auth_guid", Guid.Empty.ToString()));
-
             //Setup the main socket
             fSocket.Bind(new IPEndPoint(IPAddress.Parse(Configuration.GetString("bindaddr", "127.0.0.1")), Configuration.GetInteger("listen_port", 14617)));
             fSocket.Listen(10);
+            fSocket.BeginAccept(new AsyncCallback(IAcceptConnection), null);
+
+            //It is important that lookup be started first.
+            if (fLookup && fLookupServer == null) fLookupServer = new LookupServer();
+
+            //Start or stop any services that need to be running...
+            if (fAuth && fAuthServer == null) fAuthServer = new AuthServer();
+            if (fFile && fFileServer == null) fFileServer = new FileServer();
+            if (fVault && fVaultServer == null) fVaultServer = new VaultServer();
 
             while (true) {
-                Socket c = fSocket.Accept();
-
-                //Start or stop any services that need to be running...
-                if (fAuth && fAuthServer == null) fAuthServer = new AuthServer();
-                if (fFile && fFileServer == null) fFileServer = new FileServer();
-                if (fLookup && fLookupServer == null) fLookupServer = new LookupServer();
-                if (fVault && fVaultServer == null) fVaultServer = new VaultServer();
-
-                //Read the connect header...
-                UruStream r = new UruStream(new NetworkStream(c, false));
-                ConnectHeader hdr = new ConnectHeader();
-                hdr.Read(r);
-                r.Close();
-
-                //Factorize the connection.
-                switch (hdr.fType) {
-                    case EConnType.kConnTypeCliToAuth:
-                        if (fFile) {
-                            fLog.Verbose(String.Format("Incoming AUTH connection [{0}]", c.RemoteEndPoint.ToString()));
-                            fAuthServer.Add(c, hdr);
-                        } else
-                            fLog.Warn(String.Format("Incoming AUTH connection [{0}], but we aren't listening for AUTH!", c.RemoteEndPoint.ToString()));
-                        break;
-                    case EConnType.kConnTypeCliToFile:
-                        if (fFile) {
-                            fLog.Verbose(String.Format("Incoming FILE connection [{0}]", c.RemoteEndPoint.ToString()));
-                            fFileServer.Add(c, hdr);
-                        } else
-                            fLog.Warn(String.Format("Incoming FILE connection [{0}], but we aren't listening for FILE!", c.RemoteEndPoint.ToString()));
-                        break;
-                    case EConnType.kConnTypeCliToGame:
-                        throw new NotImplementedException();
-                    case EConnType.kConnTypeCliToGate:
-                        if (fLookup) {
-                            fLog.Verbose(String.Format("Incoming GATEWAY connection [{0}]", c.RemoteEndPoint.ToString()));
-                            fLookupServer.Add(c, hdr);
-                        } else
-                            fLog.Warn(String.Format("Incoming GATEWAY connection [{0}], but we aren't listening for GATEWAY!", c.RemoteEndPoint.ToString()));
-                        break;
-                    case EConnType.kConnTypeSrvToLookup:
-                        if (fLookup) {
-                            fLog.Verbose(String.Format("Incoming LOOKUP connection [{0}]", c.RemoteEndPoint.ToString()));
-                            fLookupServer.Add(c, hdr);
-                        } else
-                            fLog.Warn(String.Format("Incoming LOOKUP connection [{0}], but we aren't listening for LOOKUP!", c.RemoteEndPoint.ToString()));
-                        break;
-                    case EConnType.kConnTypeSrvToVault:
-                        if (fVault) {
-                            if (hdr.fProductID != auth_guid) {
-                                fLog.Warn(String.Format("Vault Client [{0}] supplied invalid ProductUUID ({1})", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
-                            } else {
-                                fLog.Verbose(String.Format("Incoming VAULT connection [{0}]", c.RemoteEndPoint.ToString()));
-                                fVaultServer.Add(c, hdr);
-                            }
-                        } else fLog.Warn(String.Format("Incoming VAULT connection [{0}], but we aren't listening for VAULT!", c.RemoteEndPoint.ToString()));
-                        break;
-                }
+                //Occupy the main thread with drudgery :(
+                Thread.Sleep(100);
             }
+        }
+
+        private void IAcceptConnection(IAsyncResult ar) {
+            Guid auth_guid = new Guid(Configuration.GetString("auth_guid", Guid.Empty.ToString()));
+
+            Socket c = fSocket.EndAccept(ar);
+
+            //Read the connect header...
+            UruStream r = new UruStream(new NetworkStream(c, false));
+            ConnectHeader hdr = new ConnectHeader();
+            hdr.Read(r);
+            r.Close();
+
+            //Factorize the connection.
+            switch (hdr.fType) {
+                case EConnType.kConnTypeCliToAuth:
+                    if (fFile) {
+                        fLog.Verbose(String.Format("Incoming AUTH connection [{0}]", c.RemoteEndPoint.ToString()));
+                        fAuthServer.Add(c, hdr);
+                    } else
+                        fLog.Warn(String.Format("Incoming AUTH connection [{0}], but we aren't listening for AUTH!", c.RemoteEndPoint.ToString()));
+                    break;
+                case EConnType.kConnTypeCliToFile:
+                    if (fFile) {
+                        fLog.Verbose(String.Format("Incoming FILE connection [{0}]", c.RemoteEndPoint.ToString()));
+                        fFileServer.Add(c, hdr);
+                    } else
+                        fLog.Warn(String.Format("Incoming FILE connection [{0}], but we aren't listening for FILE!", c.RemoteEndPoint.ToString()));
+                    break;
+                case EConnType.kConnTypeCliToGame:
+                    throw new NotImplementedException();
+                case EConnType.kConnTypeCliToGate:
+                    if (fLookup) {
+                        fLog.Verbose(String.Format("Incoming GATEKEEPER connection [{0}]", c.RemoteEndPoint.ToString()));
+                        fLookupServer.Add(c, hdr);
+                    } else
+                        fLog.Warn(String.Format("Incoming GATEKEEPER connection [{0}], but we aren't listening for GATEKEEPER!", c.RemoteEndPoint.ToString()));
+                    break;
+                case EConnType.kConnTypeSrvToLookup:
+                    if (fLookup) {
+                        fLog.Verbose(String.Format("Incoming LOOKUP connection [{0}]", c.RemoteEndPoint.ToString()));
+                        fLookupServer.Add(c, hdr);
+                    } else
+                        fLog.Warn(String.Format("Incoming LOOKUP connection [{0}], but we aren't listening for LOOKUP!", c.RemoteEndPoint.ToString()));
+                    break;
+                case EConnType.kConnTypeSrvToVault:
+                    if (fVault) {
+                        if (hdr.fProductID != auth_guid) {
+                            fLog.Warn(String.Format("Vault Client [{0}] supplied invalid ProductUUID ({1})", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
+                        } else {
+                            fLog.Verbose(String.Format("Incoming VAULT connection [{0}]", c.RemoteEndPoint.ToString()));
+                            fVaultServer.Add(c, hdr);
+                        }
+                    } else fLog.Warn(String.Format("Incoming VAULT connection [{0}], but we aren't listening for VAULT!", c.RemoteEndPoint.ToString()));
+                    break;
+            }
+
+            fSocket.BeginAccept(new AsyncCallback(IAcceptConnection), null);
         }
     }
 }

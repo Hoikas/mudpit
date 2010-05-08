@@ -24,7 +24,7 @@ namespace MUd {
     public delegate void VaultPong(uint transID, uint pingTime, byte[] payload);
     public delegate void VaultResult(uint transID, ENetError result);
 
-    public class VaultClient : Srv2CliBase {
+    public class VaultClient : Srv2SrvBase {
 
         public event VaultAgeCreated AgeCreated;
         public event VaultNodeAdded NodeAdded;
@@ -38,171 +38,31 @@ namespace MUd {
         public event VaultPlayerCreated PlayerCreated;
         public event VaultPong Pong;
 
-        public bool Connected {
-            get { return fConnected; }
-        }
-
-        UruStream fStream;
-
-        Dictionary<uint, ManualResetEvent> fMREs = new Dictionary<uint, ManualResetEvent>();
-        Dictionary<uint, object> fWaitData = new Dictionary<uint, object>();
-
-        bool fConnected = false;
-        byte[] fDhData;
-        byte[] fClientSeed;
-        uint fTransID = 0;
-
         public VaultClient()
-            : base(null, new ConnectHeader(), null) {
-            throw new NotImplementedException();
-        }
-
-        public VaultClient(LogProcessor log)
-            : base(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), new ConnectHeader(), log) {
+            : base("Vault") {
+            fHeader.fType = EConnType.kConnTypeSrvToVault;
         }
 
         #region Connect
-        public bool Connect(string host, int port) {
-            string empty = Guid.Empty.ToString();
-            try {
-                fSocket.Connect(host, port);
-            } catch (SocketException) {
-                Error("Cannot connect to vault!");
-                return false;
-            }
+        public override bool Connect() {
+            if (!base.Connect()) return false;
 
-            fConn.fBranchID = 0;
-            fConn.fBuildID = 0;
-            fConn.fBuildType = 0;
-            fConn.fProductID = new Guid(Configuration.GetString("auth_guid", empty));
-            fConn.fSockHeaderSize = (ushort)ConnectHeader.kSize;
-            fConn.fType = EConnType.kConnTypeSrvToVault;
-
-            //Send ConnectHeader
+            //Send the VaultConnectHeader
             UruStream s = new UruStream(new NetworkStream(fSocket, false));
-            fConn.Write(s);
-
-            //Check status
-            if (!fSocket.Connected) {
-                Error("Auth UUID invalid");
-                return false;
-            }
-
-            //Send the vault connection header
-            Guid token = new Guid(Configuration.GetString("vault_token", empty));
+            s.BufferWriter();
+            fHeader.Write(s);
             s.WriteInt(20);
-            s.WriteBytes(token.ToByteArray());
+            s.WriteBytes(fToken.ToByteArray());
+            s.FlushWriter();
 
-            //Check status
-            if (!fSocket.Connected) {
-                Error("Vault Token invalid");
-                return false;
-            }
-
-            //Calculate keys
-            if (!ISetupKeys()) {
-                fSocket.Close();
-                Error("Cannot setup Vault keys!");
-                return false;
-            }
-
-            //NetCliConnect
-            s.WriteByte((byte)NetCliConnectMsg.kNetCliConnect);
-            s.WriteByte((byte)(fDhData.Length + 2));
-            s.WriteBytes(fDhData);
-
-            //NetCliEncrypt
-            if (s.ReadByte() != (byte)NetCliConnectMsg.kNetCliEncrypt) {
-                fSocket.Close();
-                Error("Vault sent an ERROR message after DhY data");
-                return false;
-            }
-
-            byte[] seed = s.ReadBytes((int)(s.ReadByte() - 2));
-            ISetupEncryption(seed);
-            fConnected = true;
-            return true;
-        }
-
-        private void ISetupEncryption(byte[] seed) {
-            byte[] key = new byte[7];
-            for (int i = 0; i < 7; i++) {
-                if (i >= fClientSeed.Length) key[i] = seed[i];
-                else key[i] = (byte)(fClientSeed[i] ^ seed[i]);
-            }
-
-            fStream = new UruStream(new CryptoNetStream(key, fSocket));
-        }
-
-        private bool ISetupKeys() {
-            string dir = Configuration.GetString("enc_keys", "G:\\Plasma\\Servers\\Encryption Keys");
-            string pubkey = Path.Combine(dir, "Vault_Public.key");
-            string shared = Path.Combine(dir, "Vault_Shared.key");
-
-            if (!File.Exists(pubkey) || !File.Exists(shared))
+            //Init encryption
+            if (!base.NetCliConnect(4))
                 return false;
 
-            byte[] data = new byte[64];
-            BigNum b = BigNum.Random(512);
-
-            FileStream fs = new FileStream(pubkey, FileMode.Open, FileAccess.Read);
-            fs.Read(data, 0, 64);
-            fs.Close();
-            BigNum N = new BigNum(data);
-
-            fs = new FileStream(shared, FileMode.Open, FileAccess.Read);
-            fs.Read(data, 0, 64);
-            fs.Close();
-            BigNum X = new BigNum(data);
-
-            //Calculate seeds
-            BigNum client_seed = X.PowMod(b, N);
-            BigNum server_seed = new BigNum(4).PowMod(b, N);
-
-            //Dump data
-            fDhData = server_seed.ToArray();
-            fClientSeed = client_seed.ToArray();
-
-            //Explicitly dispose unmanaged OpenSSL resources
-            b.Dispose();
-            N.Dispose();
-            X.Dispose();
-            client_seed.Dispose();
-            server_seed.Dispose();
+            //Begin receiving data
+            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
 
             return true;
-        }
-        #endregion
-
-        #region Helpers
-        private uint IGetTransID() {
-            uint the_id = 0;
-            lock (this) {
-                the_id = fTransID;
-                fTransID += 1;
-            }
-
-            return the_id;
-        }
-        #endregion
-
-        #region ThreadClient
-        public override void Start() {
-            if (fConnected) {
-                fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IFactorizeMessage), null);
-            } else throw new Exception("Cannot start VaultCli before connection is made");
-        }
-
-        public override void Stop() {
-            Monitor.Enter(fSocket);
-            if (fStream != null) {
-                Monitor.Enter(fStream);
-                fStream.Close();
-                Monitor.Exit(fStream);
-            }
-
-            fSocket.Close();
-            Monitor.Exit(fSocket);
         }
         #endregion
 
@@ -284,27 +144,6 @@ namespace MUd {
             return req.fTransID;
         }
 
-        public byte[] FetchNodeWait(uint nodeID) {
-            Vault_FetchNode req = new Vault_FetchNode();
-            req.fNodeID = nodeID;
-            req.fTransID = IGetTransID();
-
-            lock (fStream) {
-                fStream.WriteUShort((ushort)VaultCli2Srv.FetchNode);
-                req.Write(fStream);
-            }
-
-            ManualResetEvent mre = new ManualResetEvent(false);
-            lock (fMREs)
-                fMREs.Add(req.fTransID, mre);
-            mre.WaitOne();
-
-            byte[] result = fWaitData[req.fTransID] as byte[];
-            fWaitData.Remove(req.fTransID);
-            fMREs.Remove(req.fTransID);
-            return result;
-        }
-
         public uint FetchNodeRefs(uint nodeID) {
             Vault_FetchNodeRefs req = new Vault_FetchNodeRefs();
             req.fNodeID = nodeID;
@@ -329,27 +168,6 @@ namespace MUd {
             }
 
             return req.fTransID;
-        }
-
-        public uint[] FindNodeWait(byte[] node) {
-            Vault_FindNode req = new Vault_FindNode();
-            req.fNodeData = node;
-            req.fTransID = IGetTransID();
-
-            lock (fStream) {
-                fStream.WriteUShort((ushort)VaultCli2Srv.FindNode);
-                req.Write(fStream);
-            }
-
-            ManualResetEvent mre = new ManualResetEvent(false);
-            lock (fMREs)
-                fMREs.Add(req.fTransID, mre);
-            mre.WaitOne();
-
-            uint[] result = fWaitData[req.fTransID] as uint[];
-            fWaitData.Remove(req.fTransID);
-            fMREs.Remove(req.fTransID);
-            return result;
         }
 
         public uint Ping(uint pingTime, byte[] payload) {
@@ -382,16 +200,14 @@ namespace MUd {
         }
 
         #region Message Handlers
-        private void IFactorizeMessage(IAsyncResult ar) {
+        private void IReceive(IAsyncResult ar) {
             try {
                 lock (fStream) {
                     VaultSrv2Cli msg = VaultSrv2Cli.PingReply;
                     fSocket.EndReceive(ar);
                     try {
                         msg = (VaultSrv2Cli)fStream.ReadUShort();
-                    } catch (IOException) {
-                        Debug("[VaultCli] Disconnected");
-                    }
+                    } catch (IOException) { }
 
                     switch (msg) {
                         case VaultSrv2Cli.AddNodeNotify:
@@ -432,13 +248,14 @@ namespace MUd {
                     }
                 }
 
-                fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IFactorizeMessage), null);
+                fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
             } catch (SocketException e) {
-                IHandleSocketException(e);
+                fSocket.Close();
             } catch (IOException) {
-                Debug("[VaultCli] Disconnected");
-                Stop();
-            } catch (ObjectDisposedException) { }
+                fSocket.Close();
+            } catch (ObjectDisposedException) {
+                fSocket.Close();
+            }
         }
 
         private void IAgeCreated() {
@@ -480,30 +297,15 @@ namespace MUd {
             Vault_FetchNodeReply reply = new Vault_FetchNodeReply();
             reply.Read(fStream);
 
-            lock (fMREs) {
-                if (fMREs.ContainsKey(reply.fTransID)) {
-                    fWaitData.Add(fTransID, reply.fNodeData);
-                    fMREs[reply.fTransID].Set();
-                } else {
-                    if (NodeFetched != null)
-                        NodeFetched(reply.fTransID, reply.fResult, reply.fNodeData);
-                }
-            }
+            if (NodeFetched != null)
+                NodeFetched(reply.fTransID, reply.fResult, reply.fNodeData);
         }
 
         private void INodeFound() {
             Vault_FindNodeReply reply = new Vault_FindNodeReply();
             reply.Read(fStream);
-            
-            lock (fMREs) {
-                if (fMREs.ContainsKey(reply.fTransID)) {
-                    fWaitData.Add(reply.fTransID, reply.fNodeIDs);
-                    fMREs[reply.fTransID].Set();
-                } else {
-                    if (NodeFound != null)
-                        NodeFound(reply.fTransID, reply.fResult, reply.fNodeIDs);
-                }
-            }
+            if (NodeFound != null)
+                NodeFound(reply.fTransID, reply.fResult, reply.fNodeIDs);
         }
 
         private void INodeRefsFetched() {

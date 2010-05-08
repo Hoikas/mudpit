@@ -11,12 +11,55 @@ using OpenSSL;
 namespace MUd {
     public abstract class Srv2CliBase {
         protected Socket fSocket;
+        protected UruStream fStream;
         protected LogProcessor fLog;
         protected ConnectHeader fConn;
+        protected byte[] fServerSeed = new byte[] { 0x4F, 0x17, 0xC8, 0x19, 0x3D, 0x08, 0xF3 };
 
         public Srv2CliBase(Socket s, ConnectHeader conn, LogProcessor logger) { fSocket = s; fConn = conn; fLog = logger; }
         public abstract void Start();
         public abstract void Stop();
+
+        protected bool ISetupEncryption(string srv, byte[] y_data) {
+            string dir = Configuration.GetString("enc_keys", "G:\\Plasma\\Servers\\Encryption Keys");
+            string priv = Path.Combine(dir, srv + "_Private.key");
+            string pub = Path.Combine(dir, srv + "_Public.key");
+
+            //Test for keys
+            if (!File.Exists(pub) || !File.Exists(priv))
+                return false;
+
+            BigNum Y = new BigNum(y_data);
+            byte[] data = new byte[64];
+
+            FileStream fs = new FileStream(priv, FileMode.Open, FileAccess.Read);
+            fs.Read(data, 0, 64);
+            fs.Close();
+            BigNum K = new BigNum(data);
+
+            fs = new FileStream(pub, FileMode.Open, FileAccess.Read);
+            fs.Read(data, 0, 64);
+            fs.Close();
+            BigNum N = new BigNum(data);
+
+            BigNum client_seed = Y.PowMod(K, N);
+            byte[] seed_data = client_seed.ToArray();
+            byte[] key = new byte[7];
+
+            fServerSeed = RNG.Random(7);
+            for (int i = 0; i < key.Length; i++) {
+                if (i >= seed_data.Length) key[i] = fServerSeed[i];
+                else key[i] = (byte)(seed_data[i] ^ fServerSeed[i]);
+            }
+
+            fStream = new UruStream(new CryptoNetStream(key, fSocket));
+
+            K.Dispose();
+            N.Dispose();
+            client_seed.Dispose();
+
+            return true;
+        }
 
         protected void IHandleSocketException(SocketException e) {
             switch (e.SocketErrorCode) {
@@ -123,11 +166,11 @@ namespace MUd {
             return true;
         }
 
-        protected bool NetCliConnect() {
+        protected bool NetCliConnect(int g) {
             UruStream s = new UruStream(new NetworkStream(fSocket, false));
 
             //NetCliConnect
-            ISetupKeys();
+            ISetupKeys(g);
             s.BufferWriter();
             s.WriteByte((byte)NetCliConnectMsg.kNetCliConnect);
             s.WriteByte(66);
@@ -157,14 +200,14 @@ namespace MUd {
             fStream = new UruStream(new CryptoNetStream(key, fSocket));
         }
 
-        private bool ISetupKeys() {
+        private bool ISetupKeys(int g) {
             BigNum b = BigNum.Random(512);
             BigNum N = new BigNum(fN);
             BigNum X = new BigNum(fX);
 
             //Calculate seeds
             BigNum client_seed = X.PowMod(b, N);
-            BigNum server_seed = new BigNum(4).PowMod(b, N);
+            BigNum server_seed = new BigNum(g).PowMod(b, N);
 
             //Dump data
             fDhData = server_seed.ToArray();
@@ -192,6 +235,28 @@ namespace MUd {
             }
 
             return trans;
+        }
+    }
+
+    public abstract class Srv2SrvBase : Cli2SrvBase {
+
+        protected Guid fToken;
+        public Guid Token {
+            set { fToken = value; }
+        }
+
+        public Srv2SrvBase(string type) : base() {
+            string dir = Configuration.GetString("enc_keys", "G:\\Plasma\\Servers\\Encryption Keys");
+            string pubkey = Path.Combine(dir, type + "_Public.key");
+            string shared = Path.Combine(dir, type + "_Shared.key");
+
+            FileStream fs = new FileStream(pubkey, FileMode.Open, FileAccess.Read);
+            fs.Read(fN, 0, 64);
+            fs.Close();
+
+            fs = new FileStream(shared, FileMode.Open, FileAccess.Read);
+            fs.Read(fX, 0, 64);
+            fs.Close();
         }
     }
 

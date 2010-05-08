@@ -22,10 +22,6 @@ namespace MUd {
             fWriter = new BinaryWriter(s);
         }
 
-        public static UruStream CreateBuffer() {
-            return new UruStream(new MemoryStream());
-        }
-
         public void BufferWriter() {
             if (!fBuffering) {
                 MemoryStream ms = new MemoryStream();
@@ -50,18 +46,8 @@ namespace MUd {
             }
         }
 
-        public MemoryStream AsMemoryStream() {
-            return fBaseStream as MemoryStream;
-        }
-
         public bool ReadBool() {
             return fReader.ReadBoolean();
-        }
-
-        public UruStream ReadBuffer(int size) {
-            MemoryStream ms = new MemoryStream(ReadBytes(size));
-            UruStream s = new UruStream(ms);
-            return s;
         }
 
         public byte ReadByte() {
@@ -71,6 +57,21 @@ namespace MUd {
         public byte[] ReadBytes(int count) {
             if (count == 0) return new byte[0];
             return fReader.ReadBytes(count);
+        }
+
+        public string ReadSafeString() {
+            short info = fReader.ReadInt16();
+            if ((info & 0xF000) == 0) fReader.ReadInt16(); //Garbage
+
+            int size = (info & 0x0FFF);
+            if (size > 0) {
+                byte[] data = ReadBytes(size);
+                if ((data[0] & 0x80) != 0)
+                    for (int i = 0; i < size; i++)
+                        data[i] = (byte)(~data[i]);
+                return Encoding.UTF8.GetString(data);
+            } else return String.Empty;
+            
         }
 
         public int ReadInt() {
@@ -138,6 +139,20 @@ namespace MUd {
 
         public void WriteInt(int data) {
             fWriter.Write(data);
+        }
+
+        public void WriteSafeString(string data) {
+            if (data == null)
+                data = String.Empty;
+            
+            byte[] buf = Encoding.UTF8.GetBytes(data);
+            short info = (short)(buf.Length & 0x0FFF);
+            fWriter.Write((short)(info | 0xF000));
+
+            byte[] str = new byte[info];
+            for (int i = 0; i < info; i++)
+                str[i] = (byte)(~buf[i]);
+            WriteBytes(str);
         }
 
         public void WriteUInt(uint data) {

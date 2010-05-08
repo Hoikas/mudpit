@@ -63,6 +63,8 @@
     <Compile Include="Lookup\LookupClient.cs" />
     <Compile Include="Lookup\LookupMessages.cs" />
     <Compile Include="NetCliCore.cs" />
+    <Compile Include="Plasma\Creatable.cs" />
+    <Compile Include="Plasma\UnifiedTime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShardList.cs" />
     <Compile Include="Stream\bTEA.cs" />
@@ -82,7 +84,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Plasma\" />
+    <Folder Include="Plasma\Message\" />
+    <Folder Include="Plasma\NetMessage\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -31,11 +31,15 @@ namespace KeyGen {
                 }
             }
 
+            string dir = "G:\\Plasma\\Servers\\Encryption Keys";
+            if (map.ContainsKey("out"))
+                dir = map["out"];
+
             Console.WriteLine("Generating...");
-            IGenKeys("Auth");
-            IGenKeys("Game");
-            IGenKeys("Master");
-            IGenKeys("Vault");
+            IGenKeys("Auth", dir, 41);
+            IGenKeys("Game", dir, 73);
+            IGenKeys("Master", dir, 4);
+            IGenKeys("Vault", dir, 4);
             Console.WriteLine("All keys gnerated!");
 
             if (map.ContainsKey("uru") && map.Count > 1) {
@@ -47,7 +51,7 @@ namespace KeyGen {
                     fs = new FileStream(Path.Combine(map["uru"], "UruExplorer.exe"), FileMode.Open, FileAccess.Write);
                 } catch (IOException) {
                     Console.WriteLine("ERROR: Could not open UruExplorer.exe!");
-                    Console.WriteLine("Keys not embedded.");
+                    Console.WriteLine("{UE} Keys not embedded.");
                     return;
                 }
 
@@ -58,7 +62,7 @@ namespace KeyGen {
                         fs.Position = Convert.ToInt64(map["auth"]);
                     fs.Write(fN["auth"], 0, 64);
                     fs.Write(fX["auth"], 0, 64);
-                    Console.WriteLine("AUTH key embedded!");
+                    Console.WriteLine("{UE} AUTH key embedded!");
                 }
 
                 if (map.ContainsKey("game")) {
@@ -68,7 +72,38 @@ namespace KeyGen {
                         fs.Position = Convert.ToInt64(map["game"]);
                     fs.Write(fN["game"], 0, 64);
                     fs.Write(fX["game"], 0, 64);
-                    Console.WriteLine("GAME key embedded!");
+                    Console.WriteLine("{UE} GAME key embedded!");
+                }
+
+                if (map.ContainsKey("gate")) {
+                    if (map["gate"].StartsWith("0x"))
+                        fs.Position = Convert.ToInt64(map["gate"].Substring(2), 16);
+                    else
+                        fs.Position = Convert.ToInt64(map["gate"]);
+                    fs.Write(fN["master"], 0, 64);
+                    fs.Write(fX["master"], 0, 64);
+                    Console.WriteLine("{UE} GATE key embedded!");
+                }
+
+                if (map.ContainsKey("gate-patcher")) {
+                    FileStream patcher = null;
+                    try {
+                        patcher = new FileStream(Path.Combine(map["uru"], "UruLauncher.exe"), FileMode.Open, FileAccess.Write);
+                    } catch (IOException) {
+                        Console.WriteLine("ERROR: Could not open UruLauncher.exe!");
+                        Console.WriteLine("{UL} GATE key not embedded.");
+                        if (fs != null) fs.Close();
+                        return;
+                    }
+
+                    if (map["gate-patcher"].StartsWith("0x"))
+                        patcher.Position = Convert.ToInt64(map["gate-patcher"].Substring(2), 16);
+                    else
+                        patcher.Position = Convert.ToInt64(map["gate-patcher"]);
+                    patcher.Write(fN["master"], 0, 64);
+                    patcher.Write(fX["master"], 0, 64);
+                    Console.WriteLine("{UL} GATE key embedded!");
+                    patcher.Close();
                 }
 
                 if (fs != null) fs.Close();
@@ -77,23 +112,21 @@ namespace KeyGen {
 
         private static void IDoHelp() {
             Console.WriteLine("KeyGen.exe");
-            Console.WriteLine("Usage: KeyGen.exe [--uru=path] [--auth=addr] [--game=addr] ");
+            Console.WriteLine("Usage: KeyGen.exe [--out=path] [--uru=path] [--auth=addr] [--game=addr] [--gate=addr] [--gate-patcher=addr]");
             Console.WriteLine();
             Console.WriteLine("This tool generates Public, Private, and Shared keyfiles for MOUL Servers");
         }
 
-        private static void IGenKeys(string keyname) {
+        private static void IGenKeys(string keyname, string dir, int g) {
             BigNum N = BigNum.GeneratePrime(512);
             BigNum K = BigNum.GeneratePrime(512);
-            BigNum X = new BigNum(4).PowMod(K, N);
+            BigNum X = new BigNum(g).PowMod(K, N);
 
             fX.Add(keyname.ToLower(), X.ToArray());
             fN.Add(keyname.ToLower(), N.ToArray());
 
-            string dir = MUd.Configuration.GetString("enc_keys", "G:\\Plasma\\Servers\\Encryption Keys");
-            if (!Directory.Exists(dir)) {
+            if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
-            }
 
             //Create Keys...
             FileStream fs = new FileStream(Path.Combine(dir, keyname + "_Public.key"), FileMode.Create, FileAccess.Write);

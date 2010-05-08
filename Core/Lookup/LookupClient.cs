@@ -9,15 +9,15 @@ using System.Text;
 namespace MUd {
     public delegate void LookupPong(uint transID, uint pingTime, byte[] payload);
 
-    public class LookupClient : Cli2SrvBase {
+    public class LookupClient : Srv2SrvBase {
 
         public event LookupPong Pong;
 
-        public LookupClient() : base() {
+        public LookupClient() : base("Master") {
             fHeader.fType = EConnType.kConnTypeSrvToLookup;
         }
 
-        public bool Connect(Guid token) {
+        public bool Connect() {
             if (!base.Connect()) return false;
 
             //Send the LookupConnectHeader
@@ -25,15 +25,13 @@ namespace MUd {
             s.BufferWriter();
             fHeader.Write(s);
             s.WriteInt(20);
-            s.WriteBytes(token.ToByteArray());
+            s.WriteBytes(fToken.ToByteArray());
             s.FlushWriter();
             s.Close();
 
             //Init encryption
-            if (!base.NetCliConnect())
+            if (!base.NetCliConnect(4))
                 return false;
-
-            Ping((uint)DateTime.UtcNow.Ticks, Encoding.UTF8.GetBytes("Hello, Mr. Lookup!"));
             
             //Begin receiving from the server
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);

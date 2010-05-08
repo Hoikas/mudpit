@@ -10,10 +10,7 @@ using OpenSSL;
 namespace MUd {
     public abstract class MasterBase : Srv2CliBase {
 
-        private byte[] fServerSeed;
-
         protected LookupServer fParent;
-        protected UruStream fStream;
 
         protected MasterBase(LookupServer parent, Socket s, ConnectHeader hdr, LogProcessor log) : base(s, hdr, log) {
             fParent = parent;

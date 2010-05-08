@@ -65,4 +65,22 @@ namespace MUd {
             s.WriteInt(fPingTime);
         }
     }
+
+    public struct Game_PropagateBuffer {
+        public CreatableID fMsgType;
+        public byte[] fBuffer;
+
+        public void Read(UruStream s) {
+            fMsgType = (CreatableID)s.ReadUInt();
+            fBuffer = s.ReadBytes(s.ReadInt());
+        }
+
+        public void Write(UruStream s) {
+            s.WriteUInt((uint)fMsgType);
+
+            if (fBuffer == null) fBuffer = new byte[0];
+            s.WriteInt(fBuffer.Length);
+            s.WriteBytes(fBuffer);
+        }
+    }
 }

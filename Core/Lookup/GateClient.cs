@@ -32,7 +32,7 @@ namespace MUd {
             s.Close();
 
             //Init encryption
-            if (!base.NetCliConnect())
+            if (!base.NetCliConnect(4))
                 return false;
 
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
