@@ -85,21 +85,17 @@ namespace MUd {
             s.WriteUInt(fTransID);
             s.WriteInt((int)fResult);
             s.WriteInt(fAgeMcpID);
-
-            //Need to adjust the UUID because MOUL is queer
-            //Skip gayness for now...
             s.WriteBytes(fAgeInstanceUuid.ToByteArray());
-            /* byte[] guid = fAgeInstanceUuid.ToByteArray();
-            guid[12] = (byte)(guid[11] << 4 | guid[12] >> 4);
-            s.WriteBytes(guid); */
-            //End gayness
-
             s.WriteUInt(fAgeVaultID);
 
-            //Little Endian IP
-            byte[] ip = fGameServerIP.GetAddressBytes();
-            Array.Reverse(ip);
-            s.WriteBytes(ip);
+            if (fGameServerIP == null) {
+                s.WriteInt(0);
+            } else {
+                //Little Endian IP
+                byte[] ip = fGameServerIP.GetAddressBytes();
+                Array.Reverse(ip);
+                s.WriteBytes(ip);
+            }
         }
     }
 

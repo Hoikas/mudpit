@@ -14,6 +14,11 @@ namespace MUd {
             get { return fConnType; }
         }
 
+        private string fSrvHost;
+        public string SrvHost {
+            get { return fSrvHost; }
+        }
+
         public LookupThread(LookupServer parent, LookupConnType type, Socket c, ConnectHeader hdr, LogProcessor log) 
             : base(parent, c, hdr, log) {
             fConnType = type;
@@ -73,6 +78,12 @@ namespace MUd {
                     case LookupCli2Srv.ClientCount:
                         IUpdateCliCount();
                         break;
+                    case LookupCli2Srv.DeclareHost:
+                        IDeclareHost();
+                        break;
+                    case LookupCli2Srv.FindAgeRequest:
+                        IFindAge();
+                        break;
                     case LookupCli2Srv.PingRequest:
                         IPingPong();
                         break;
@@ -100,6 +111,33 @@ namespace MUd {
             } catch (ObjectDisposedException) { }
         }
 
+        private void IDeclareHost() {
+            Lookup_DeclareHost req = new Lookup_DeclareHost();
+            req.Read(fStream);
+
+            if (fSrvHost == null) {
+                fSrvHost = req.fHost;
+                fParent.UpdateCliCount(req.fHost, fConnType, 0);
+            }
+        }
+
+        private void IFindAge() {
+            Lookup_AgeRequest req = new Lookup_AgeRequest();
+            req.Read(fStream);
+
+            Lookup_AgeReply reply = new Lookup_AgeReply();
+            reply.fAgeInstanceUuid = req.fAgeInstanceUuid;
+            reply.fAgeVaultID = req.fAgeVaultID;
+            reply.fGameServerIP = fParent.FindGameServer(req.fAgeFilename, req.fAgeInstanceUuid, req.fAgeVaultID);
+            reply.fResult = (reply.fGameServerIP == null ? ENetError.kNetErrInternalError : ENetError.kNetSuccess);
+            reply.fTransID = req.fTransID;
+
+            fStream.BufferWriter();
+            fStream.WriteUShort((ushort)LookupSrv2Cli.FindAgeReply);
+            reply.Write(fStream);
+            fStream.FlushWriter();
+        }
+
         private void IPingPong() {
             Lookup_PingPong ping = new Lookup_PingPong();
             ping.Read(fStream);
@@ -116,7 +154,8 @@ namespace MUd {
             Lookup_ClientCount cc = new Lookup_ClientCount();
             cc.Read(fStream);
 
-            fParent.UpdateCliCount(cc.fHost, fConnType, cc.fNumClients);
+            if (fSrvHost != null)
+                fParent.UpdateCliCount(fSrvHost, fConnType, cc.fNumClients);
         }
     }
 }

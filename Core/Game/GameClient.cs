@@ -8,12 +8,14 @@ using System.Threading;
 
 namespace MUd {
     public delegate void GameAgeJoined(ENetError result);
+    public delegate void GamePong(int ms);
     public delegate void GameRawBuffer(CreatableID pCre, byte[] buf, bool handled);
 
     public class GameClient : Cli2SrvBase {
 
         public event GameAgeJoined AgeJoined;
         public event GameRawBuffer BufferPropagated;
+        public event GamePong Pong;
 
         private Guid fAcctUuid;
         public Guid AccountUUID {
@@ -64,6 +66,17 @@ namespace MUd {
             return true;
         }
 
+        protected override void RunIdleBehavior() {
+            switch (fIdleBeh) {
+                case IdleBehavior.Disconnect:
+                    Disconnect();
+                    break;
+                case IdleBehavior.Ping:
+                    Ping((int)DateTime.Now.Ticks);
+                    break;
+            }
+        }
+
         public uint JoinAge() {
             Game_JoinAgeRequest req = new Game_JoinAgeRequest();
             req.fAcctUuid = fAcctUuid;
@@ -71,6 +84,7 @@ namespace MUd {
             req.fPlayerID = fPlayerID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)GameCli2Srv.JoinAgeRequest);
@@ -86,10 +100,24 @@ namespace MUd {
             buffer.fBuffer = buf;
             buffer.fMsgType = pCre;
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)GameCli2Srv.PropagateBuffer);
                 buffer.Write(fStream);
+                fStream.FlushWriter();
+            }
+        }
+
+        public void Ping(int ms) {
+            Game_PingPong ping = new Game_PingPong();
+            ping.fPingTime = ms;
+
+            ResetIdleTimer();
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)GameCli2Srv.PingRequest);
+                ping.Write(fStream);
                 fStream.FlushWriter();
             }
         }
@@ -99,9 +127,14 @@ namespace MUd {
                 lock (fStream) {
                     fSocket.EndReceive(ar);
                     GameSrv2Cli msg = (GameSrv2Cli)fStream.ReadUShort();
+
+                    ResetIdleTimer();
                     switch (msg) {
                         case GameSrv2Cli.JoinAgeReply:
                             IJoinAgeReply();
+                            break;
+                        case GameSrv2Cli.PingReply:
+                            IPong();
                             break;
                         case GameSrv2Cli.PropagateBuffer:
                             IPropagateBuffer();
@@ -127,6 +160,13 @@ namespace MUd {
             reply.Read(fStream);
             if (AgeJoined != null)
                 AgeJoined(reply.fResult);
+        }
+
+        private void IPong() {
+            Game_PingPong pong = new Game_PingPong();
+            pong.Read(fStream);
+            if (Pong != null)
+                Pong(pong.fPingTime);
         }
 
         private void IPropagateBuffer() {

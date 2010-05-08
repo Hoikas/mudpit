@@ -23,6 +23,7 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConnectForm));
             this.fShardDropDown = new System.Windows.Forms.ComboBox();
             this.fShardHostBox = new System.Windows.Forms.TextBox();
             this.fShardLabel = new System.Windows.Forms.Label();
@@ -36,6 +37,9 @@
             this.fRememberMe = new System.Windows.Forms.CheckBox();
             this.fAutoConnect = new System.Windows.Forms.CheckBox();
             this.fHelloLabel = new System.Windows.Forms.Label();
+            this.fRefreshLink = new System.Windows.Forms.LinkLabel();
+            this.fRefreshImage = new System.Windows.Forms.PictureBox();
+            ((System.ComponentModel.ISupportInitialize)(this.fRefreshImage)).BeginInit();
             this.SuspendLayout();
             // 
             // fShardDropDown
@@ -111,20 +115,20 @@
             // fLogin
             // 
             this.fLogin.Enabled = false;
-            this.fLogin.Location = new System.Drawing.Point(63, 192);
+            this.fLogin.Location = new System.Drawing.Point(66, 213);
             this.fLogin.Name = "fLogin";
             this.fLogin.Size = new System.Drawing.Size(75, 23);
-            this.fLogin.TabIndex = 8;
+            this.fLogin.TabIndex = 9;
             this.fLogin.Text = "Login";
             this.fLogin.UseVisualStyleBackColor = true;
             this.fLogin.Click += new System.EventHandler(this.IBeginLoginProcess);
             // 
             // fClose
             // 
-            this.fClose.Location = new System.Drawing.Point(145, 192);
+            this.fClose.Location = new System.Drawing.Point(148, 213);
             this.fClose.Name = "fClose";
             this.fClose.Size = new System.Drawing.Size(75, 23);
-            this.fClose.TabIndex = 9;
+            this.fClose.TabIndex = 10;
             this.fClose.Text = "Close";
             this.fClose.UseVisualStyleBackColor = true;
             this.fClose.Click += new System.EventHandler(this.ICloseForm);
@@ -132,10 +136,10 @@
             // fRememberMe
             // 
             this.fRememberMe.AutoSize = true;
-            this.fRememberMe.Location = new System.Drawing.Point(104, 145);
+            this.fRememberMe.Location = new System.Drawing.Point(106, 167);
             this.fRememberMe.Name = "fRememberMe";
             this.fRememberMe.Size = new System.Drawing.Size(95, 17);
-            this.fRememberMe.TabIndex = 6;
+            this.fRememberMe.TabIndex = 7;
             this.fRememberMe.Text = "Remember Me";
             this.fRememberMe.UseVisualStyleBackColor = true;
             this.fRememberMe.CheckedChanged += new System.EventHandler(this.IRememberMeChecked);
@@ -144,10 +148,10 @@
             // 
             this.fAutoConnect.AutoSize = true;
             this.fAutoConnect.Enabled = false;
-            this.fAutoConnect.Location = new System.Drawing.Point(104, 169);
+            this.fAutoConnect.Location = new System.Drawing.Point(106, 190);
             this.fAutoConnect.Name = "fAutoConnect";
             this.fAutoConnect.Size = new System.Drawing.Size(106, 17);
-            this.fAutoConnect.TabIndex = 7;
+            this.fAutoConnect.TabIndex = 8;
             this.fAutoConnect.Text = "Connect on Start";
             this.fAutoConnect.UseVisualStyleBackColor = true;
             // 
@@ -160,11 +164,34 @@
             this.fHelloLabel.TabIndex = 12;
             this.fHelloLabel.Text = "Please choose a shard to login to.";
             // 
+            // fRefreshLink
+            // 
+            this.fRefreshLink.AutoSize = true;
+            this.fRefreshLink.Location = new System.Drawing.Point(101, 146);
+            this.fRefreshLink.Name = "fRefreshLink";
+            this.fRefreshLink.Size = new System.Drawing.Size(94, 13);
+            this.fRefreshLink.TabIndex = 6;
+            this.fRefreshLink.TabStop = true;
+            this.fRefreshLink.Text = "Refresh Shard List";
+            this.fRefreshLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.IRefreshShards);
+            // 
+            // fRefreshImage
+            // 
+            this.fRefreshImage.Image = ((System.Drawing.Image)(resources.GetObject("fRefreshImage.Image")));
+            this.fRefreshImage.Location = new System.Drawing.Point(79, 145);
+            this.fRefreshImage.Name = "fRefreshImage";
+            this.fRefreshImage.Size = new System.Drawing.Size(16, 16);
+            this.fRefreshImage.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+            this.fRefreshImage.TabIndex = 14;
+            this.fRefreshImage.TabStop = false;
+            // 
             // ConnectForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(291, 233);
+            this.ClientSize = new System.Drawing.Size(291, 248);
+            this.Controls.Add(this.fRefreshImage);
+            this.Controls.Add(this.fRefreshLink);
             this.Controls.Add(this.fHelloLabel);
             this.Controls.Add(this.fAutoConnect);
             this.Controls.Add(this.fRememberMe);
@@ -185,6 +212,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.Text = "Connect to a Shard";
+            ((System.ComponentModel.ISupportInitialize)(this.fRefreshImage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -205,5 +233,7 @@
         private System.Windows.Forms.CheckBox fRememberMe;
         private System.Windows.Forms.CheckBox fAutoConnect;
         private System.Windows.Forms.Label fHelloLabel;
+        private System.Windows.Forms.LinkLabel fRefreshLink;
+        private System.Windows.Forms.PictureBox fRefreshImage;
     }
 }

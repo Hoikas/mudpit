@@ -14,26 +14,7 @@ using OpenSSL;
 
 namespace MUd {
     public partial class AuthThread : Srv2CliBase {
-        struct Chunk {
-            public byte[] fChunk;
-            public uint fPos;
-
-            public Chunk(byte[] chunk, uint pos) {
-                fChunk = chunk;
-                fPos = pos;
-            }
-        }
-
-        enum AcctPrivLevel {
-            Banned = 0,
-            Normal,
-            Private,
-            CCR,
-            Admin,
-        }
-
         const int kAuthHeaderSize = 20;
-
 
         Dictionary<uint, Queue<Chunk>> fQueuedChunks = new Dictionary<uint, Queue<Chunk>>();
         Dictionary<uint, uint> fFileSizes = new Dictionary<uint, uint>();
@@ -46,6 +27,7 @@ namespace MUd {
         bool fLoggedIn = false;
 
         AuthServer fParent;
+        LookupClient fLookupCli;
         VaultClient fVaultCli;
         DbConnection fDB;
 
@@ -53,7 +35,17 @@ namespace MUd {
             : base(s, hdr, log) {
             fParent = parent;
 
+            fLookupCli = new LookupClient();
+            fLookupCli.SetIdleBehavior(IdleBehavior.Ping, 180000);
+            fLookupCli.Host = Configuration.GetString("lookup_addr", "127.0.0.1");
+            fLookupCli.Port = Configuration.GetInteger("lookup_port", 14617);
+            fLookupCli.ProductID = Configuration.GetGuid("auth_guid");
+            fLookupCli.Token = Configuration.GetGuid("lookup_token");
+
+            fLookupCli.AgeFound += new LookupAgeFound(ILookupAgeFound);
+
             fVaultCli = new VaultClient();
+            fVaultCli.SetIdleBehavior(IdleBehavior.Ping, 180000);
             fVaultCli.Host = Configuration.GetString("vault_addr", "127.0.0.1");
             fVaultCli.Port = Configuration.GetInteger("vault_port", 14617);
             fVaultCli.ProductID = Configuration.GetGuid("auth_guid");
@@ -75,7 +67,7 @@ namespace MUd {
                 fDB = Database.Connect();
             } catch (DbException) {
                 Error("Failed to connect to DATABASE...");
-                IKickClient(ENetError.kNetErrInternalError);
+                Stop();
             }
         }
 
@@ -256,6 +248,32 @@ namespace MUd {
         private void IFindAge() {
             Auth_AgeRequest req = new Auth_AgeRequest();
             req.Read(fStream);
+
+            ENetError err = ICanDoStuff();
+            if (err == ENetError.kNetSuccess) {
+                //   ---Find Age Process---
+                //Step #1: Find the AgeNode in the vault
+                VaultAgeNode age = new VaultAgeNode();
+                age.AgeName = req.fAgeName;
+                age.Instance = req.fAgeInstanceUuid;
+
+                uint trans = fVaultCli.FindNode(age.BaseNode.ToArray());
+                lock (fVaultToAuthMap)
+                    fVaultToAuthMap.Add(trans, req.fTransID);
+                lock (fVaultTransTags)
+                    fVaultTransTags.Add(trans, new AgeTag(req.fAgeName, req.fAgeInstanceUuid));
+            } else {
+                Error(String.Format("Tried to Find an Age, but we can't do stuff! [REASON: {0}]", err.ToString().Substring(4)));
+
+                Auth_AgeReply reply = new Auth_AgeReply();
+                reply.fResult = err;
+                reply.fTransID = req.fTransID;
+
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)AuthSrv2Cli.AgeReply);
+                reply.Write(fStream);
+                fStream.FlushWriter();
+            }
         }
 
         private void IKickClient(ENetError reason) {

@@ -20,7 +20,7 @@ namespace MUd {
             fLookupCli.Token = new Guid(Configuration.GetString("lookup_token", Guid.Empty.ToString()));
 
             fLookupCli.Connect();
-            fLookupCli.SetNumClients(Configuration.GetString("public_addr", "127.0.0.1"), 0);
+            fLookupCli.DeclareHost(Configuration.GetString("public_addr", "127.0.0.1"));
         }
 
         public void Add(Socket c, ConnectHeader hdr) {
@@ -29,14 +29,14 @@ namespace MUd {
 
             lock (fClients) {
                 fClients.Add(ft);
-                fLookupCli.SetNumClients(Configuration.GetString("public_addr", "127.0.0.1"), (uint)fClients.Count);
+                fLookupCli.SetNumClients((uint)fClients.Count);
             }
         }
 
         public void Remove(FileThread ft) {
             lock (fClients) {
                 fClients.Remove(ft);
-                fLookupCli.SetNumClients(Configuration.GetString("public_addr", "127.0.0.1"), (uint)fClients.Count);
+                fLookupCli.SetNumClients((uint)fClients.Count);
             }
         }
     }

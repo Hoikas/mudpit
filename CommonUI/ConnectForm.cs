@@ -16,6 +16,7 @@ namespace MUd {
         readonly Guid kUruExplorer = new Guid("ea489821-6c35-4bd0-9dae-bb17c585e680");
         uint fBuildID = 0;
 
+        DateTime fLastUpdate = DateTime.Now.Subtract(new TimeSpan(0, 0, 5));
         WebRequest fShardReq;
         Shard OurShard {
             get { return (Shard)fShardDropDown.Items[fShardDropDown.SelectedIndex]; }
@@ -109,6 +110,7 @@ namespace MUd {
             ShardList list = ShardList.Create(s);
             Invoke(new Action<Shard[]>(IInvokedUpdate), new object[] { list.fShards });
             list.Serialize("shards.xml");
+            fLastUpdate = DateTime.Now;
         }
 
         private void IGrabShardList() {
@@ -217,5 +219,17 @@ namespace MUd {
             fShardHostBox.Text = OurShard.fGate.fHost;
         }
         #endregion
+
+        private void IRefreshShards(object sender, LinkLabelLinkClickedEventArgs e) {
+            if ((DateTime.Now - fLastUpdate).Seconds < 5)
+                return;
+
+            fLogin.Enabled = false;
+            fShardDropDown.Enabled = false;
+            fShardHostBox.Enabled = false;
+            fShardDropDown.Items.Clear();
+
+            IGrabShardList();
+        }
     }
 }

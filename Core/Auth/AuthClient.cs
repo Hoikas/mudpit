@@ -97,6 +97,17 @@ namespace MUd {
             return true;
         }
 
+        protected override void RunIdleBehavior() {
+            switch (fIdleBeh) {
+                case IdleBehavior.Disconnect:
+                    Disconnect();
+                    break;
+                case IdleBehavior.Ping:
+                    Ping((uint)DateTime.Now.Ticks, Encoding.UTF8.GetBytes("IDLE"));
+                    break;
+            }
+        }
+
         public uint AddVaultNode(uint parent, uint child, uint saver) {
             Auth_VaultNodeAdd req = new Auth_VaultNodeAdd();
             req.fChildID = child;
@@ -104,6 +115,7 @@ namespace MUd {
             req.fSaverID = saver;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeAdd);
@@ -122,6 +134,7 @@ namespace MUd {
             lock (fTransToName)
                 fTransToName.Add(req.fTransID, name);
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.FileDownloadRequest);
@@ -137,6 +150,7 @@ namespace MUd {
             req.fNodeID = nodeID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeFetch);
@@ -152,6 +166,7 @@ namespace MUd {
             req.fNodeID = nodeID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultFetchNodeRefs);
@@ -167,6 +182,7 @@ namespace MUd {
             req.fNodeData = pattern;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeFind);
@@ -182,6 +198,7 @@ namespace MUd {
             req.fFilename = filename;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.GetPublicAgeList);
@@ -198,6 +215,7 @@ namespace MUd {
             req.fExtension = ext;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.FileListRequest);
@@ -221,6 +239,7 @@ namespace MUd {
             req.fOS = "MUd 2";
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.AcctLoginRequest);
@@ -237,6 +256,7 @@ namespace MUd {
             req.fPingTime = pingTime;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.PingRequest);
@@ -253,6 +273,7 @@ namespace MUd {
             req.fParentID = parent;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeRemove);
@@ -269,6 +290,7 @@ namespace MUd {
             req.fAgeInstanceUuid = instance;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.AgeRequest);
@@ -286,6 +308,7 @@ namespace MUd {
             req.fRevisionID = revUuid;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeSave);
@@ -301,6 +324,7 @@ namespace MUd {
             req.fPlayerID = id;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.AcctSetPlayerRequest);
@@ -316,6 +340,7 @@ namespace MUd {
             req.fAgeInfoID = ageInfoID;
             req.fPublic = isPublic;
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.SetAgePublic);
@@ -329,6 +354,8 @@ namespace MUd {
                 lock (fStream) {
                     fSocket.EndReceive(ar);
                     AuthSrv2Cli msg = (AuthSrv2Cli)fStream.ReadUShort();
+
+                    ResetIdleTimer();
                     switch (msg) {
                         case AuthSrv2Cli.AcctLoginReply:
                             ILoggedIn();

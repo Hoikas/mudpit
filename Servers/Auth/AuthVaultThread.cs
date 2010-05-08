@@ -13,16 +13,33 @@ namespace MUd {
     public partial class AuthThread : Srv2CliBase {
 
         Dictionary<uint, uint> fVaultToAuthMap = new Dictionary<uint, uint>();
+        Dictionary<uint, object> fVaultTransTags = new Dictionary<uint, object>();
+
+        private object IVaultPopTag(uint transID) {
+            lock (fVaultTransTags) {
+                if (fVaultTransTags.ContainsKey(transID)) {
+                    object tag = fVaultTransTags[transID];
+                    fVaultTransTags.Remove(transID);
+                    return tag;
+                } else
+                    return null;
+            }
+        }
+
+        private uint IVaultPopTransID(uint transID) {
+            lock (fVaultToAuthMap) {
+                uint authTrans = fVaultToAuthMap[transID];
+                fVaultToAuthMap.Remove(transID);
+                return authTrans;
+            }
+        }
 
         private void IVaultOnAgeCreated(uint transID, ENetError result, uint ageID, uint infoID) {
             Auth_InitAgeReply reply = new Auth_InitAgeReply();
             reply.fAgeNodeID = ageID;
             reply.fInfoNodeID = infoID;
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -49,10 +66,7 @@ namespace MUd {
         private void IVaultOnNodeAddReply(uint transID, ENetError result) {
             Auth_VaultNodeAddReply reply = new Auth_VaultNodeAddReply();
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -79,10 +93,7 @@ namespace MUd {
             Auth_VaultNodeCreated reply = new Auth_VaultNodeCreated();
             reply.fNodeID = nodeID;
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -96,10 +107,7 @@ namespace MUd {
             Auth_VaultNodeFetched reply = new Auth_VaultNodeFetched();
             reply.fNodeData = nodeData;
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -110,19 +118,64 @@ namespace MUd {
         }
 
         private void IVaultOnNodeFound(uint transID, ENetError result, uint[] nodes) {
-            Auth_VaultNodeFindReply reply = new Auth_VaultNodeFindReply();
-            reply.fNodeIDs = nodes;
-            reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            object tag = IVaultPopTag(transID);
 
-            lock (fStream) {
-                fStream.BufferWriter();
-                fStream.WriteUShort((ushort)AuthSrv2Cli.VaultNodeFindReply);
-                reply.Write(fStream);
-                fStream.FlushWriter();
+            //What kind of notification is this?
+            //  TAG == null: Normal NodeFind from the client.
+            //  TAG is AgeTag, then we're finding an age.
+            if (tag == null) {
+                Auth_VaultNodeFindReply reply = new Auth_VaultNodeFindReply();
+                reply.fNodeIDs = nodes;
+                reply.fResult = result;
+                reply.fTransID = IVaultPopTransID(transID);
+
+                lock (fStream) {
+                    fStream.BufferWriter();
+                    fStream.WriteUShort((ushort)AuthSrv2Cli.VaultNodeFindReply);
+                    reply.Write(fStream);
+                    fStream.FlushWriter();
+                }
+            } else if (tag is AgeTag) {
+                //   ---Find Age Process---
+                //Step #2: Ask the LookupServer for a GameServer
+                
+                AgeTag age = (AgeTag)tag;
+                if (nodes.Length > 1)
+                    Warn(String.Format("Multiple AgeNodes found! Choosing first found. [AGE: {0}] [UUID: {1}]", age.fFilename, age.fInstance));
+                
+                //None found? O.o
+                ENetError err = ENetError.kNetPending;
+                if (nodes.Length == 0) {
+                    Error(String.Format("Zero AgeNodes found! [AGE: {0}] [UUID: {1}]", age.fFilename, age.fInstance));
+                    err = ENetError.kNetErrAgeNotFound;
+                } else {
+                    if (!fLookupCli.Connected) {
+                        if (!fLookupCli.Connect()) {
+                            err = ENetError.kNetErrInternalError;
+                            Error("Could not connect to LookupSrv!");
+                        } else {
+                            err = ENetError.kNetSuccess;
+                            Verbose("Connected to LookupSrv");
+                        }
+                    } else
+                        err = ENetError.kNetSuccess;
+                }
+
+                if (err == ENetError.kNetSuccess) {
+                    //Send off the FindAgeReq
+                    uint trans = fLookupCli.FindAge(age.fFilename, age.fInstance, nodes[0]);
+                    lock (fLookupToAuthMap)
+                        fLookupToAuthMap.Add(trans, IVaultPopTransID(transID));
+                } else {
+                    Auth_AgeReply reply = new Auth_AgeReply();
+                    reply.fResult = err;
+                    reply.fTransID = IVaultPopTransID(transID);
+
+                    fStream.BufferWriter();
+                    fStream.WriteUShort((ushort)AuthSrv2Cli.AgeReply);
+                    reply.Write(fStream);
+                    fStream.FlushWriter();
+                }
             }
         }
 
@@ -130,10 +183,7 @@ namespace MUd {
             Auth_VaultNodeRefsFetched reply = new Auth_VaultNodeRefsFetched();
             reply.fRefs = refs;
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -141,17 +191,12 @@ namespace MUd {
                 reply.Write(fStream);
                 fStream.FlushWriter();
             }
-
-            Debug(String.Format("Sent VaultTree [COUNT: {0}] [RESULT: {1}]", refs.Length, result.ToString().Substring(1)));
         }
 
         private void IVaultOnNodeSaved(uint transID, ENetError result) {
             Auth_VaultNodeSaveReply reply = new Auth_VaultNodeSaveReply();
             reply.fResult = result;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 fStream.BufferWriter();
@@ -168,10 +213,7 @@ namespace MUd {
             reply.fName = playerName;
             reply.fPlayerID = playerID;
             reply.fResult = ENetError.kNetSuccess;
-            lock (fVaultToAuthMap) {
-                reply.fTransID = fVaultToAuthMap[transID];
-                fVaultToAuthMap.Remove(transID);
-            }
+            reply.fTransID = IVaultPopTransID(transID);
 
             lock (fStream) {
                 InsertStatement ins = new InsertStatement();
@@ -189,8 +231,6 @@ namespace MUd {
                 reply.Write(fStream);
                 fStream.FlushWriter();
             }
-
-            Info(String.Format("Created Player [ID: {0}] [Name: {1}] [Shape: {2}]", playerID, playerName, model));
         }
 
         private void IVaultOnPong(uint transID, uint pingTime, byte[] payload) {

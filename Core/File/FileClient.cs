@@ -34,10 +34,42 @@ namespace MUd {
             return true;
         }
 
+        protected override void RunIdleBehavior() {
+            switch (fIdleBeh) {
+                case IdleBehavior.Disconnect:
+                    Disconnect();
+                    break;
+                case IdleBehavior.Ping:
+                    Ping((int)DateTime.Now.Ticks);
+                    break;
+            }
+        }
+
+        public void Ping(int time) {
+            File_PingPong ping = new File_PingPong();
+            ping.fPingTime = time;
+
+            ResetIdleTimer();
+            lock (fSocket) {
+                MemoryStream ms = new MemoryStream();
+                UruStream s = new UruStream(ms);
+
+                s.WriteUInt(12);
+                s.WriteInt((int)FileCli2Srv.PingRequest);
+                ping.Write(s);
+
+                fSocket.Send(ms.ToArray());
+
+                s.Close();
+                ms.Close();
+            }
+        }
+
         public uint RequestBuildID() {
             File_BuildIdRequest req = new File_BuildIdRequest();
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fSocket) {
                 MemoryStream ms = new MemoryStream();
                 UruStream s = new UruStream(ms);
@@ -59,6 +91,8 @@ namespace MUd {
             try {
                 lock (fSocket) {
                     fSocket.EndReceive(ar);
+                    
+                    ResetIdleTimer();
 
                     //Size
                     byte[] buf = new byte[4];

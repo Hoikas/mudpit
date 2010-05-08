@@ -16,6 +16,18 @@ namespace MUd {
 
     public class LookupServer {
 
+        struct LookupAge {
+            public string fFilename;
+            public Guid fUuid;
+            public uint fAgeVaultID;
+
+            public LookupAge(string name, Guid uuid, uint vault) {
+                fFilename = name;
+                fUuid = uuid;
+                fAgeVaultID = vault;
+            }
+        }
+
         const int kMasterHeaderSize = 20;
 
         private List<MasterBase> fClients = new List<MasterBase>();
@@ -24,6 +36,8 @@ namespace MUd {
         private Dictionary<string, uint> fAuthSrvs = new Dictionary<string, uint>();
         private Dictionary<string, uint> fFileSrvs = new Dictionary<string, uint>();
         private Dictionary<string, uint> fGameSrvs = new Dictionary<string, uint>();
+
+        private Dictionary<LookupAge, IPAddress> fAgesRunning = new Dictionary<LookupAge, IPAddress>();
 
         public void Add(Socket c, ConnectHeader hdr) {
             UruStream s = new UruStream(new NetworkStream(c, false));
@@ -46,17 +60,17 @@ namespace MUd {
                     break;
                 case EConnType.kConnTypeSrvToLookup:
                     LookupConnType type = LookupConnType.kUnknown;
-                    if (hdr.fProductID == new Guid(Configuration.GetString("auth_guid", Guid.Empty.ToString())))
+                    if (hdr.fProductID == Configuration.GetGuid("auth_guid"))
                         type = LookupConnType.kAuthSrv;
-                    else if (hdr.fProductID == new Guid(Configuration.GetString("file_guid", Guid.Empty.ToString())))
+                    else if (hdr.fProductID == Configuration.GetGuid("file_guid"))
                         type = LookupConnType.kFileSrv;
-                    else if (hdr.fProductID == new Guid(Configuration.GetString("game_guid", Guid.Empty.ToString())))
+                    else if (hdr.fProductID == Configuration.GetGuid("game_guid"))
                         type = LookupConnType.kGameSrv;
                     else {
                         fLog.Warn(String.Format("[Client: {0}] Got an interesting ProductUUID [{1}] for Lookup", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
                     }
 
-                    if (token == new Guid(Configuration.GetString("lookup_token", Guid.Empty.ToString())))
+                    if (token == Configuration.GetGuid("lookup_token"))
                         mb = new LookupThread(this, type, c, hdr, fLog);
                     else
                         fLog.Error(String.Format("[Client: {0}] Got an interesting token [{1}] for Lookup... Goodbye.", c.RemoteEndPoint.ToString(), token.ToString()));
@@ -72,6 +86,39 @@ namespace MUd {
             } else {
                 s.Close();
                 c.Close();
+            }
+        }
+
+        public IPAddress FindGameServer(string name, Guid uuid, uint vaultID) {
+            LookupAge age = new LookupAge(name, uuid, vaultID);
+            lock (fAgesRunning) {
+                if (fAgesRunning.ContainsKey(age))
+                    return fAgesRunning[age];
+                else {
+                    string server = GetBestServer(LookupConnType.kGameSrv);
+                    if (server == null) {
+                        fLog.Error("There are no GameServers connected!");
+                        return null;
+                    }
+                    
+                    //Try to parse ;)
+                    IPAddress addr = null;
+                    IPAddress.TryParse(server, out addr);
+
+                    if (addr == null) {
+                        IPAddress[] ips = Dns.GetHostAddresses(server);
+
+                        if (ips.Length > 1)
+                            fLog.Warn(String.Format("Server [{0}] resolved to multiple IPs! Using the first.", server));
+                        else if (ips.Length == 0) {
+                            fLog.Error(String.Format("Server [{0}] resolved to ***NO*** IPs! YOUFAIL.", server));
+                            return null;
+                        }
+
+                        return ips[0];
+                    } else
+                        return addr;
+                }
             }
         }
 
@@ -116,6 +163,16 @@ namespace MUd {
                 if (fClients.Contains(mb))
                     fClients.Remove(mb);
             }
+
+            //Remove the CliCount, if there is one.
+            //Why? Don't advertise dead servers to clients ;)
+            if (mb is LookupThread) {
+                LookupThread lt = (LookupThread)mb;
+                if (lt.SrvHost != null) {
+                    fLog.Info(String.Format("Server [{0}] is disconnecting", lt.SrvHost));
+                    IRemoveCliCount(lt.SrvHost, lt.ConnType);
+                }
+            }
         }
 
         public void UpdateCliCount(string host, LookupConnType type, uint count) {
@@ -140,6 +197,23 @@ namespace MUd {
                         else fGameSrvs[host] = count;
                     }
 
+                    break;
+            }
+        }
+
+        private void IRemoveCliCount(string host, LookupConnType type) {
+            switch (type) {
+                case LookupConnType.kAuthSrv:
+                    lock (fAuthSrvs)
+                        fAuthSrvs.Remove(host);
+                    break;
+                case LookupConnType.kFileSrv:
+                    lock (fFileSrvs)
+                        fFileSrvs.Remove(host);
+                    break;
+                case LookupConnType.kGameSrv:
+                    lock (fGameSrvs)
+                        fGameSrvs.Remove(host);
                     break;
             }
         }

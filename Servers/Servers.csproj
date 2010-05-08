@@ -50,7 +50,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Auth\AuthLookupThread.cs" />
     <Compile Include="Auth\AuthServer.cs" />
+    <Compile Include="Auth\AuthThreadStructs.cs" />
     <Compile Include="Auth\AuthUruThread.cs" />
     <Compile Include="Auth\AuthVaultThread.cs" />
     <Compile Include="Database.cs" />

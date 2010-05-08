@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading;
 using OpenSSL;
 
+using System.Timers;
+using Timer = System.Timers.Timer;
+
 namespace MUd {
     public abstract class Srv2CliBase {
         protected Socket fSocket;
@@ -83,6 +86,12 @@ namespace MUd {
         #endregion
     }
 
+    public enum IdleBehavior {
+        Disconnect,
+        DoNothing,
+        Ping,
+    }
+
     public delegate void ExceptionArgs(Exception e);
     public abstract class Cli2SrvBase {
         public event ExceptionArgs ExceptionHandler;
@@ -90,6 +99,10 @@ namespace MUd {
         protected Socket fSocket;
         protected ConnectHeader fHeader;
         protected UruStream fStream;
+
+        protected IdleBehavior fIdleBeh = IdleBehavior.DoNothing;
+        private uint fIdleMs;
+        private Timer fIdleTimer = new Timer();
 
         byte[] fDhData, fClientSeed;
         uint fTransID = 0;
@@ -154,6 +167,9 @@ namespace MUd {
         }
 
         protected Cli2SrvBase() {
+            fIdleTimer.Elapsed += new ElapsedEventHandler(IIdleTimerFired);
+            SetIdleBehavior(IdleBehavior.DoNothing, 30000);
+
             fHeader = new ConnectHeader();
             fHeader.fBuildType = 50;
             fHeader.fSockHeaderSize = 31;
@@ -163,6 +179,7 @@ namespace MUd {
         public virtual bool Connect() {
             fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             fSocket.Connect(fHost, fPort);
+            SetIdleBehavior(fIdleBeh, fIdleMs);
             return true;
         }
 
@@ -187,7 +204,13 @@ namespace MUd {
         }
 
         public void Disconnect() {
+            fIdleTimer.Stop(); //Don't run idle timer after DC
             fSocket.Shutdown(SocketShutdown.Both);
+        }
+
+        private void IIdleTimerFired(object sender, ElapsedEventArgs e) {
+            if (!Connected) return;
+            RunIdleBehavior();
         }
 
         private void ISetupEncryption(byte[] seed) {
@@ -226,6 +249,28 @@ namespace MUd {
         protected void FireException(Exception e) {
             ExceptionHandler(e);
         }
+
+        public void SetIdleBehavior(IdleBehavior beh, uint ms) {
+            fIdleBeh = beh;
+            fIdleMs = ms;
+
+            fIdleTimer.Stop();
+            if (beh != IdleBehavior.DoNothing) {
+                fIdleTimer.AutoReset = true;
+                fIdleTimer.Interval = Convert.ToDouble(ms);
+                fIdleTimer.Start();
+            }
+        }
+
+        protected void ResetIdleTimer() {
+            if (fIdleBeh != IdleBehavior.DoNothing) {
+                fIdleTimer.Stop();
+                fIdleTimer.Interval = Convert.ToDouble(fIdleMs);
+                fIdleTimer.Start();
+            }
+        }
+
+        protected abstract void RunIdleBehavior();
 
         protected uint IGetTransID() {
             uint trans = 0;

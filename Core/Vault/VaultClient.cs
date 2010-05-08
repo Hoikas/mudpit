@@ -9,8 +9,6 @@ using System.Threading;
 using System.Timers;
 using OpenSSL;
 
-using Timer = System.Timers.Timer;
-
 namespace MUd {
 
     public delegate void VaultAgeCreated(uint transID, ENetError result, uint ageID, uint infoID);
@@ -43,7 +41,6 @@ namespace MUd {
             fHeader.fType = EConnType.kConnTypeSrvToVault;
         }
 
-        #region Connect
         public override bool Connect() {
             if (!base.Connect()) return false;
 
@@ -64,7 +61,17 @@ namespace MUd {
 
             return true;
         }
-        #endregion
+
+        protected override void RunIdleBehavior() {
+            switch (fIdleBeh) {
+                case IdleBehavior.Disconnect:
+                    Disconnect();
+                    break;
+                case IdleBehavior.Ping:
+                    Ping((uint)DateTime.Now.Ticks, Encoding.UTF8.GetBytes("IDLE"));
+                    break;
+            }
+        }
 
         public uint AddNode(uint parentID, uint childID, uint saverID) {
             Vault_AddNodeRequest req = new Vault_AddNodeRequest();
@@ -73,6 +80,7 @@ namespace MUd {
             req.fSaverID = saverID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.AddNodeRequest);
                 req.Write(fStream);
@@ -94,6 +102,7 @@ namespace MUd {
             req.fTransID = IGetTransID();
             req.fUserName = userName;
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.CreateAgeRequest);
                 req.Write(fStream);
@@ -107,6 +116,7 @@ namespace MUd {
             req.fNodeData = data;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.CreateNodeRequest);
                 req.Write(fStream);
@@ -123,6 +133,7 @@ namespace MUd {
             req.fName = name;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.CreatePlayerRequest);
                 req.Write(fStream);
@@ -136,6 +147,7 @@ namespace MUd {
             req.fNodeID = nodeID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.FetchNode);
                 req.Write(fStream);
@@ -149,6 +161,7 @@ namespace MUd {
             req.fNodeID = nodeID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.FetchNodeRefs);
                 req.Write(fStream);
@@ -162,6 +175,7 @@ namespace MUd {
             req.fNodeData = node;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.FindNode);
                 req.Write(fStream);
@@ -176,6 +190,7 @@ namespace MUd {
             ping.fPingTime = pingTime;
             ping.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.PingRequest);
                 ping.Write(fStream);
@@ -191,6 +206,7 @@ namespace MUd {
             req.fRevisionID = revID;
             req.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.WriteUShort((ushort)VaultCli2Srv.SaveNodeRequest);
                 req.Write(fStream);
@@ -209,6 +225,7 @@ namespace MUd {
                         msg = (VaultSrv2Cli)fStream.ReadUShort();
                     } catch (IOException) { }
 
+                    ResetIdleTimer();
                     switch (msg) {
                         case VaultSrv2Cli.AddNodeNotify:
                             INodeAdded();

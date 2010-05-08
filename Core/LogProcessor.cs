@@ -59,7 +59,7 @@ namespace MUd {
             fWriter = new StreamWriter(fLocation.Replace(':', '.') + ".0.log");
             lock (fWriter) {
                 fWriter.WriteLine("MUd: MYST Uru Daemon");
-                fWriter.WriteLine("By using this program, you are violating your EULA with GameTap and CYAN Worlds, Inc.");
+                fWriter.WriteLine("By using this program, you are violating your EULA with CYAN Worlds, Inc.");
                 fWriter.WriteLine("The MUd Development Team is not responsible for damages incurred by the use of the program.");
                 fWriter.WriteLine();
                 fWriter.WriteLine();

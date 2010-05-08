@@ -54,8 +54,6 @@ namespace MUd {
         }
 
         private void IAcceptConnection(IAsyncResult ar) {
-            Guid auth_guid = new Guid(Configuration.GetString("auth_guid", Guid.Empty.ToString()));
-
             Socket c = fSocket.EndAccept(ar);
 
             //Read the connect header...
@@ -98,7 +96,7 @@ namespace MUd {
                     break;
                 case EConnType.kConnTypeSrvToVault:
                     if (fVault) {
-                        if (hdr.fProductID != auth_guid) {
+                        if (hdr.fProductID != Configuration.GetGuid("auth_guid")) {
                             fLog.Warn(String.Format("Vault Client [{0}] supplied invalid ProductUUID ({1})", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
                         } else {
                             fLog.Verbose(String.Format("Incoming VAULT connection [{0}]", c.RemoteEndPoint.ToString()));

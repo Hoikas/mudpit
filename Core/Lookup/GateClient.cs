@@ -39,11 +39,23 @@ namespace MUd {
             return true;
         }
 
+        protected override void RunIdleBehavior() {
+            switch (fIdleBeh) {
+                case IdleBehavior.Disconnect:
+                    Disconnect();
+                    break;
+                case IdleBehavior.Ping:
+                    Ping((uint)DateTime.Now.Ticks, Encoding.UTF8.GetBytes("IDLE"));
+                    break;
+            }
+        }
+
         public uint GetFileHost(bool usePool) {
             Gate_FileSrvRequest req = new Gate_FileSrvRequest();
             req.fTransID = IGetTransID();
             req.fUsePool = usePool;
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)GateCli2Srv.FileSrvIpAddressRequest);
@@ -60,6 +72,7 @@ namespace MUd {
             ping.fPingTime = pingTime;
             ping.fTransID = IGetTransID();
 
+            ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)GateCli2Srv.PingRequest);
@@ -75,6 +88,8 @@ namespace MUd {
                 lock (fStream) {
                     fSocket.EndReceive(ar);
                     GateSrv2Cli msg = (GateSrv2Cli)fStream.ReadUShort();
+
+                    ResetIdleTimer();
                     switch (msg) {
                         case GateSrv2Cli.FileSrvIpAddressReply:
                             IGotFileIP();
