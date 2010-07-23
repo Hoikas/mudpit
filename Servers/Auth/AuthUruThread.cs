@@ -221,7 +221,6 @@ namespace MUd {
             } catch (SocketException e) {
                 IHandleSocketException(e);
             } catch (IOException) {
-                Debug("[UruCli] Disconnected");
                 Stop();
             } catch (ObjectDisposedException) { }
         }

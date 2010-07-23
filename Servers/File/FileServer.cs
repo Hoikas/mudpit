@@ -14,7 +14,7 @@ namespace MUd {
         private LookupClient fLookupCli = new LookupClient();
 
         public FileServer() {
-            fLookupCli.Host = Configuration.GetString("lookup_addr", "192.168.1.2");
+            fLookupCli.Host = Configuration.GetString("lookup_addr", "127.0.0.1");
             fLookupCli.Port = Configuration.GetInteger("lookup_port", 14617);
             fLookupCli.ProductID = new Guid(Configuration.GetString("file_guid", Guid.Empty.ToString()));
             fLookupCli.Token = new Guid(Configuration.GetString("lookup_token", Guid.Empty.ToString()));

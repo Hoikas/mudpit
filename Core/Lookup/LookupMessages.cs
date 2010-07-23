@@ -11,11 +11,13 @@ namespace MUd {
         DeclareHost,
         FindAgeRequest,
         PingRequest,
+        AgeStarted,
     }
 
     public enum LookupSrv2Cli {
         FindAgeReply,
         PingReply,
+        StartAgeCmd,
     }
 
     public struct Lookup_AgeDestroyed {
@@ -39,6 +41,7 @@ namespace MUd {
     public struct Lookup_AgeReply {
         public uint fTransID;
         public ENetError fResult;
+        public uint fAgeMcpID;
         public Guid fAgeInstanceUuid;
         public uint fAgeVaultID;
         public IPAddress fGameServerIP;
@@ -135,6 +138,48 @@ namespace MUd {
                 s.WriteInt(fPayload.Length);
                 s.WriteBytes(fPayload);
             }
+        }
+    }
+
+    public struct Lookup_StartAgeCmd {
+        public string fAgeFilename;
+        public Guid fAgeInstanceUuid;
+        public uint fAgeVaultID;
+
+        public void Read(UruStream s) {
+            fAgeFilename = s.ReadUnicodeStringV16(40);
+            fAgeInstanceUuid = new Guid(s.ReadBytes(16));
+            fAgeVaultID = s.ReadUInt();
+        }
+
+        public void Write(UruStream s) {
+            s.WriteUnicodeStringV16(fAgeFilename, 40);
+            s.WriteBytes(fAgeInstanceUuid.ToByteArray());
+            s.WriteUInt(fAgeVaultID);
+        }
+    }
+
+    public struct Lookup_AgeStarted {
+        public ENetError fResult;
+        public string fAgeFilename;
+        public Guid fAgeInstanceUuid;
+        public uint fAgeVaultID;
+        public uint fAgeMcpID;
+
+        public void Read(UruStream s) {
+            fResult = (ENetError)s.ReadInt();
+            fAgeFilename = s.ReadUnicodeStringV16(40);
+            fAgeInstanceUuid = new Guid(s.ReadBytes(16));
+            fAgeVaultID = s.ReadUInt();
+            fAgeMcpID = s.ReadUInt();
+        }
+
+        public void Write(UruStream s) {
+            s.WriteInt((int)fResult);
+            s.WriteUnicodeStringV16(fAgeFilename, 40);
+            s.WriteBytes(fAgeInstanceUuid.ToByteArray());
+            s.WriteUInt(fAgeVaultID);
+            s.WriteUInt(fAgeMcpID);
         }
     }
 }

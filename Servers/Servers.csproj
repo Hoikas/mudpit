@@ -59,6 +59,9 @@
     <Compile Include="Dispatch.cs" />
     <Compile Include="File\FileServer.cs" />
     <Compile Include="File\FileThread.cs" />
+    <Compile Include="Game\GameAgent.cs" />
+    <Compile Include="Game\GameServer.cs" />
+    <Compile Include="Game\GameThread.cs" />
     <Compile Include="Lookup\GateThread.cs" />
     <Compile Include="Lookup\LookupServer.cs" />
     <Compile Include="Lookup\LookupThread.cs" />
@@ -81,9 +84,6 @@
     <None Include="MUd.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Game\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

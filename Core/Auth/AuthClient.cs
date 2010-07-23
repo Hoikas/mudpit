@@ -9,7 +9,7 @@ using System.Text;
 using OpenSSL;
 
 namespace MUd {
-    public delegate void AuthAgeReply(uint transID, ENetError result, Guid instance, int mcpid, uint vaultID, IPAddress gameSrv);
+    public delegate void AuthAgeReply(uint transID, ENetError result, Guid instance, uint mcpid, uint vaultID, IPAddress gameSrv);
     public delegate void AuthChunkDownloaded(uint transID, ENetError result, uint fileSize, uint chunkPos, byte[] data);
     public delegate void AuthClientRegistered(uint challenge);
     public delegate void AuthFileDownloaded(uint transID, string name, byte[] data);

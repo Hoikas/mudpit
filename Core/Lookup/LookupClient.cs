@@ -9,11 +9,13 @@ using System.Text;
 namespace MUd {
     public delegate void LookupAgeFound(uint transID, ENetError result, Guid uuid, uint ageVault, IPAddress gameIP);
     public delegate void LookupPong(uint transID, uint pingTime, byte[] payload);
+    public delegate void LookupStartAgeCmd(string age, Guid uuid, uint vaultID);
 
     public class LookupClient : Srv2SrvBase {
 
         public event LookupAgeFound AgeFound;
         public event LookupPong Pong;
+        public event LookupStartAgeCmd StartAge;
 
         public LookupClient() : base("Master") {
             fHeader.fType = EConnType.kConnTypeSrvToLookup;
@@ -82,16 +84,31 @@ namespace MUd {
             return req.fTransID;
         }
 
-        public void NotifyAgeDestroyed(string age, Guid uuid, uint ageVault) {
+        public void NotifyAgeDestroyed(Guid uuid) {
             Lookup_AgeDestroyed notify = new Lookup_AgeDestroyed();
-            notify.fAgeFilename = age;
             notify.fAgeInstanceUuid = uuid;
-            notify.fAgeVaultID = ageVault;
 
             ResetIdleTimer();
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)LookupCli2Srv.AgeDestroyed);
+                notify.Write(fStream);
+                fStream.FlushWriter();
+            }
+        }
+
+        public void NotifyAgeStarted(ENetError result, string age, Guid uuid, uint vaultID, uint mcpid) {
+            Lookup_AgeStarted notify = new Lookup_AgeStarted();
+            notify.fAgeFilename = age;
+            notify.fAgeInstanceUuid = uuid;
+            notify.fAgeMcpID = mcpid;
+            notify.fAgeVaultID = vaultID;
+            notify.fResult = result;
+
+            ResetIdleTimer();
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)LookupCli2Srv.AgeStarted);
                 notify.Write(fStream);
                 fStream.FlushWriter();
             }
@@ -141,6 +158,9 @@ namespace MUd {
                         case LookupSrv2Cli.PingReply:
                             IPong();
                             break;
+                        case LookupSrv2Cli.StartAgeCmd:
+                            IStartAge();
+                            break;
                         default:
                             string test = Enum.GetName(typeof(LookupSrv2Cli), msg);
                             throw new NotSupportedException(msg.ToString("X") + " - " + test);
@@ -165,6 +185,13 @@ namespace MUd {
             pong.Read(fStream);
             if (Pong != null)
                 Pong(pong.fTransID, pong.fPingTime, pong.fPayload);
+        }
+
+        private void IStartAge() {
+            Lookup_StartAgeCmd cmd = new Lookup_StartAgeCmd();
+            cmd.Read(fStream);
+            if (StartAge != null)
+                StartAge(cmd.fAgeFilename, cmd.fAgeInstanceUuid, cmd.fAgeVaultID);
         }
     }
 }

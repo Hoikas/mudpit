@@ -7,8 +7,23 @@ namespace MUd {
     public abstract class VaultNodeAccess {
         protected VaultNode fBase;
 
+        public uint CreatorID {
+            get { return fBase.fCreatorIdx; }
+            set { fBase.fCreatorIdx = value; }
+        }
+
+        public Guid CreatorUUID {
+            get { return fBase.fCreatorUuid; }
+            set { fBase.fCreatorUuid = value; }
+        }
+
         public VaultNode BaseNode {
             get { return fBase; }
+        }
+
+        public uint ID {
+            get { return fBase.ID; }
+            set { fBase.ID = value; }
         }
 
         public VaultNodeAccess() { }

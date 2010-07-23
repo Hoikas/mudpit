@@ -78,11 +78,11 @@ namespace MUd {
         #region Log Methods
         //These will pretty-fy the message for you.
         //The logger is still directly accessible though...
-        protected void Error(string msg) { fLog.Error(String.Format("[Client: {0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
-        protected void Warn(string msg) { fLog.Warn(String.Format("[Client: {0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
-        protected void Info(string msg) { fLog.Info(String.Format("[Client: {0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
-        protected void Debug(string msg) { fLog.Debug(String.Format("[Client: {0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
-        protected void Verbose(string msg) { fLog.Verbose(String.Format("[Client: {0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
+        protected void Error(string msg) { fLog.Error(String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
+        protected void Warn(string msg) { fLog.Warn(String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
+        protected void Info(string msg) { fLog.Info(String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
+        protected void Debug(string msg) { fLog.Debug(String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
+        protected void Verbose(string msg) { fLog.Verbose(String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg)); }
         #endregion
     }
 

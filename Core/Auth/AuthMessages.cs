@@ -64,7 +64,7 @@ namespace MUd {
     public struct Auth_AgeReply {
         public uint fTransID;
         public ENetError fResult;
-        public int fAgeMcpID;
+        public uint fAgeMcpID;
         public Guid fAgeInstanceUuid;
         public uint fAgeVaultID;
         public IPAddress fGameServerIP;
@@ -72,7 +72,7 @@ namespace MUd {
         public void Read(UruStream s) {
             fTransID = s.ReadUInt();
             fResult = (ENetError)s.ReadInt();
-            fAgeMcpID = s.ReadInt();
+            fAgeMcpID = s.ReadUInt();
             fAgeInstanceUuid = new Guid(s.ReadBytes(16));
             fAgeVaultID = s.ReadUInt();
 
@@ -84,7 +84,7 @@ namespace MUd {
         public void Write(UruStream s) {
             s.WriteUInt(fTransID);
             s.WriteInt((int)fResult);
-            s.WriteInt(fAgeMcpID);
+            s.WriteUInt(fAgeMcpID);
             s.WriteBytes(fAgeInstanceUuid.ToByteArray());
             s.WriteUInt(fAgeVaultID);
 

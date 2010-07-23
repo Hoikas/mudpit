@@ -16,15 +16,27 @@ namespace MUd {
 
     public class LookupServer {
 
-        struct LookupAge {
+        struct AgeKey {
             public string fFilename;
             public Guid fUuid;
             public uint fAgeVaultID;
 
-            public LookupAge(string name, Guid uuid, uint vault) {
+            public AgeKey(string name, Guid uuid, uint vault) {
                 fFilename = name;
                 fUuid = uuid;
                 fAgeVaultID = vault;
+            }
+        }
+
+        struct AgeValue {
+            public IPAddress fSrvAddr;
+            public uint fMcpID;
+            public uint fNumExplorers;
+
+            public AgeValue(IPAddress addr, uint mcpid) { 
+                fSrvAddr = addr;
+                fMcpID = mcpid;
+                fNumExplorers = 0; 
             }
         }
 
@@ -37,7 +49,11 @@ namespace MUd {
         private Dictionary<string, uint> fFileSrvs = new Dictionary<string, uint>();
         private Dictionary<string, uint> fGameSrvs = new Dictionary<string, uint>();
 
-        private Dictionary<LookupAge, IPAddress> fAgesRunning = new Dictionary<LookupAge, IPAddress>();
+        private Dictionary<AgeKey, AgeValue> fAgesRunning = new Dictionary<AgeKey, AgeValue>();
+
+        public void AddAge(string filename, Guid uuid, uint vaultID, uint mcpID) {
+            throw new NotImplementedException();
+        }
 
         public void Add(Socket c, ConnectHeader hdr) {
             UruStream s = new UruStream(new NetworkStream(c, false));
@@ -89,37 +105,16 @@ namespace MUd {
             }
         }
 
-        public IPAddress FindGameServer(string name, Guid uuid, uint vaultID) {
-            LookupAge age = new LookupAge(name, uuid, vaultID);
-            lock (fAgesRunning) {
-                if (fAgesRunning.ContainsKey(age))
-                    return fAgesRunning[age];
-                else {
-                    string server = GetBestServer(LookupConnType.kGameSrv);
-                    if (server == null) {
-                        fLog.Error("There are no GameServers connected!");
-                        return null;
-                    }
-                    
-                    //Try to parse ;)
-                    IPAddress addr = null;
-                    IPAddress.TryParse(server, out addr);
+        public IPAddress GetAgeIP(string filename, Guid uuid, uint vaultID) {
+            AgeKey key = new AgeKey(filename, uuid, vaultID);
+            lock (fAgesRunning)
+                return fAgesRunning[key].fSrvAddr;
+        }
 
-                    if (addr == null) {
-                        IPAddress[] ips = Dns.GetHostAddresses(server);
-
-                        if (ips.Length > 1)
-                            fLog.Warn(String.Format("Server [{0}] resolved to multiple IPs! Using the first.", server));
-                        else if (ips.Length == 0) {
-                            fLog.Error(String.Format("Server [{0}] resolved to ***NO*** IPs! YOUFAIL.", server));
-                            return null;
-                        }
-
-                        return ips[0];
-                    } else
-                        return addr;
-                }
-            }
+        public uint GetAgeMcpID(string filename, Guid uuid, uint vaultID) {
+            AgeKey key = new AgeKey(filename, uuid, vaultID);
+            lock (fAgesRunning)
+                return fAgesRunning[key].fMcpID;
         }
 
         public string GetBestServer(LookupConnType type) {
@@ -158,6 +153,12 @@ namespace MUd {
             return winner.Key;
         }
 
+        public bool HasAge(string filename, Guid uuid, uint vaultID) {
+            AgeKey key = new AgeKey(filename, uuid, vaultID);
+            lock (fAgesRunning)
+                return fAgesRunning.ContainsKey(key);
+        }
+
         public void Remove(MasterBase mb) {
             lock (fClients) {
                 if (fClients.Contains(mb))
@@ -173,6 +174,39 @@ namespace MUd {
                     IRemoveCliCount(lt.SrvHost, lt.ConnType);
                 }
             }
+        }
+
+        public void RemoveAge(Guid uuid) {
+            lock (fAgesRunning) {
+                foreach (KeyValuePair<AgeKey, AgeValue> kvp in fAgesRunning) {
+                    if (kvp.Key.fUuid == uuid) {
+                        fLog.Info(String.Format("GameSrv [{0}] was destroyed", uuid));
+                        fAgesRunning.Remove(kvp.Key);
+                        break;
+                    }
+                }
+            }
+        }
+
+        public bool StartAge(string filename, Guid uuid, uint vaultID) {
+            string srv = GetBestServer(LookupConnType.kGameSrv);
+            if (srv == null) {
+                fLog.Error("No GameServers are connected!");
+                return false;
+            }
+
+            lock (fClients) {
+                foreach (MasterBase mb in fClients)
+                    if (mb is LookupThread) {
+                        LookupThread lt = (LookupThread)mb;
+                        if (lt.ConnType == LookupConnType.kGameSrv && lt.SrvHost == srv) {
+                            lt.StartAge(filename, uuid, vaultID);
+                            return true;
+                        }
+                    }
+            }
+
+            return false;
         }
 
         public void UpdateCliCount(string host, LookupConnType type, uint count) {

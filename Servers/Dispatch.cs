@@ -16,6 +16,7 @@ namespace MUd {
 
         private AuthServer fAuthServer;
         private FileServer fFileServer;
+        private GameAgent fGameAgent;
         private LookupServer fLookupServer;
         private VaultServer fVaultServer;
 
@@ -45,6 +46,7 @@ namespace MUd {
             //Start or stop any services that need to be running...
             if (fAuth && fAuthServer == null) fAuthServer = new AuthServer();
             if (fFile && fFileServer == null) fFileServer = new FileServer();
+            if (fGame && fGameAgent == null) fGameAgent = new GameAgent();
             if (fVault && fVaultServer == null) fVaultServer = new VaultServer();
 
             while (true) {
@@ -79,7 +81,12 @@ namespace MUd {
                         fLog.Warn(String.Format("Incoming FILE connection [{0}], but we aren't listening for FILE!", c.RemoteEndPoint.ToString()));
                     break;
                 case EConnType.kConnTypeCliToGame:
-                    throw new NotImplementedException();
+                    if (fGame) {
+                        fLog.Verbose(String.Format("Incoming GAME connection [{0}]", c.RemoteEndPoint.ToString()));
+                        fGameAgent.Add(c, hdr);
+                    } else
+                        fLog.Warn(String.Format("Incoming GAME connection [{0}], but we aren't listening for GAME!", c.RemoteEndPoint.ToString()));
+                    break;
                 case EConnType.kConnTypeCliToGate:
                     if (fLookup) {
                         fLog.Verbose(String.Format("Incoming GATEKEEPER connection [{0}]", c.RemoteEndPoint.ToString()));
@@ -96,11 +103,12 @@ namespace MUd {
                     break;
                 case EConnType.kConnTypeSrvToVault:
                     if (fVault) {
-                        if (hdr.fProductID != Configuration.GetGuid("auth_guid")) {
-                            fLog.Warn(String.Format("Vault Client [{0}] supplied invalid ProductUUID ({1})", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
-                        } else {
+                        Guid[] acceptable = new Guid[] { Configuration.GetGuid("auth_guid"), Configuration.GetGuid("game_guid") };
+                        if (acceptable.Contains(hdr.fProductID)) {
                             fLog.Verbose(String.Format("Incoming VAULT connection [{0}]", c.RemoteEndPoint.ToString()));
                             fVaultServer.Add(c, hdr);
+                        } else {
+                            fLog.Warn(String.Format("Vault Client [{0}] supplied invalid ProductUUID ({1})", c.RemoteEndPoint.ToString(), hdr.fProductID.ToString()));
                         }
                     } else fLog.Warn(String.Format("Incoming VAULT connection [{0}], but we aren't listening for VAULT!", c.RemoteEndPoint.ToString()));
                     break;

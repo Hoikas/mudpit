@@ -153,7 +153,7 @@ namespace MUd {
 
             VaultAgeLinkNode link = new VaultAgeLinkNode();
             link.BaseNode.fCreatorIdx = player;
-            link.SpawnPoints = "Default:LinkInPointDefault;";
+            link.SpawnPoints = "Default:LinkInPointDefault:;";
             ICreateNode(link.BaseNode);
             ICreateNodeRef(link.BaseNode.ID, info.BaseNode.ID, player);
 
@@ -167,21 +167,26 @@ namespace MUd {
         private VaultAgeInfoNode ICreateAgeNodes(uint creator, Guid ageUuid, Guid parentUuid, string filename, string instance, string userName, string description, int seqNum, int lang) {
             Info(String.Format("Creating an age... [AGE: {0}] [PLAYER: {1}]", filename, creator));
             
+            //Age Node
             VaultAgeNode age = new VaultAgeNode();
             age.AgeName = filename;
-            age.BaseNode.fCreatorIdx = creator;
+            age.CreatorID = creator;
             age.Instance = ageUuid;
             age.ParentInstance = parentUuid;
             ICreateNode(age.BaseNode);
 
+            //AgeDevices Folder
             VaultFolderNode devices = new VaultFolderNode();
             devices.FolderType = EStandardNode.kAgeDevicesFolder;
+            devices.CreatorID = age.ID;
             ICreateNode(devices.BaseNode);
-            ICreateNodeRef(age.BaseNode.ID, devices.BaseNode.ID, creator);
+            ICreateNodeRef(age.ID, devices.ID, 0);
 
+            //AgeInfo Node
             VaultAgeInfoNode age_info = new VaultAgeInfoNode();
-            age_info.AgeNodeID = age.BaseNode.ID;
-            age_info.BaseNode.fCreatorIdx = creator;
+            age_info.AgeNodeID = age.ID;
+            age_info.CreatorID = age.ID;
+            age_info.CreatorUUID = ageUuid;
             age_info.Description = description;
             age_info.Filename = filename;
             age_info.InstanceName = instance;
@@ -192,24 +197,52 @@ namespace MUd {
             age_info.SequenceNumber = seqNum;
             age_info.UserDefinedName = userName;
             ICreateNode(age_info.BaseNode);
+            ICreateNodeRef(age.ID, age_info.ID, 0);
 
+            //AgeOwners Folder
             VaultPlayerInfoListNode owners = new VaultPlayerInfoListNode();
-            owners.BaseNode.fCreatorIdx = creator;
+            owners.CreatorID = age.ID;
             owners.FolderType = EStandardNode.kAgeOwnersFolder;
             ICreateNode(owners.BaseNode);
-            ICreateNodeRef(age_info.BaseNode.ID, owners.BaseNode.ID, creator);
+            ICreateNodeRef(age_info.ID, owners.ID, 0);
 
+            //CanVisit Folder
             VaultPlayerInfoListNode vistors = new VaultPlayerInfoListNode();
-            vistors.BaseNode.fCreatorIdx = creator;
+            vistors.CreatorID = age.ID;
             vistors.FolderType = EStandardNode.kCanVisitFolder;
             ICreateNode(vistors.BaseNode);
-            ICreateNodeRef(age_info.BaseNode.ID, vistors.BaseNode.ID, creator);
+            ICreateNodeRef(age_info.ID, vistors.ID, 0);
 
+            //ChildAges Folder
             VaultAgeInfoListNode child_ages = new VaultAgeInfoListNode();
-            child_ages.BaseNode.fCreatorIdx = creator;
+            child_ages.CreatorID = age.ID;
             child_ages.FolderType = EStandardNode.kChildAgesFolder;
             ICreateNode(child_ages.BaseNode);
-            ICreateNodeRef(age_info.BaseNode.ID, child_ages.BaseNode.ID, creator);
+            ICreateNodeRef(age_info.ID, child_ages.ID, 0);
+
+            //Chronicle Folder
+            VaultFolderNode chron = new VaultFolderNode();
+            chron.CreatorID = age.ID;
+            chron.FolderType = EStandardNode.kChronicleFolder;
+            ICreateNode(chron.BaseNode);
+            ICreateNodeRef(age.ID, chron.ID, 0);
+
+            //PeopleIKnowAbout Folder
+            VaultPlayerInfoListNode recents = new VaultPlayerInfoListNode();
+            recents.CreatorID = age.ID;
+            recents.FolderType = EStandardNode.kPeopleIKnowAboutFolder;
+            ICreateNode(recents.BaseNode);
+            ICreateNodeRef(age.ID, recents.ID, 0);
+
+            //SubAges Folder
+            VaultAgeInfoListNode sub_ages = new VaultAgeInfoListNode();
+            sub_ages.BaseNode.fCreatorIdx = age.BaseNode.ID;
+            sub_ages.FolderType = EStandardNode.kSubAgesFolder;
+            ICreateNode(sub_ages.BaseNode);
+            ICreateNodeRef(age.ID, sub_ages.ID, 0);
+
+            //System Link
+            ICreateNodeRef(age.ID, SystemNode, 0);
 
             return age_info;
         }
