@@ -81,11 +81,12 @@ namespace MUd {
 
         private void IDeleteKiItem(object sender, EventArgs e) {
             if (fMailList.FocusedItem == null) return;
-
             VaultNode cTag = (VaultNode)fMailList.FocusedItem.Tag;
             VaultNode pTag = (VaultNode)fAgeList.FocusedItem.Tag;
 
-            fParent.AuthCli.RemoveVaultNode(pTag.ID, cTag.ID);
+            DialogResult dr = MessageBox.Show(String.Format("Are you sure you want to delete \"{0}\"?", cTag.fString64[0]), "Delete KI Mail", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dr == DialogResult.Yes)
+                fParent.AuthCli.RemoveVaultNode(pTag.ID, cTag.ID);
         }
 
         private void IJournalSelected(object sender, ListViewItemSelectionChangedEventArgs e) {

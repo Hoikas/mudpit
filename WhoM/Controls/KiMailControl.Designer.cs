@@ -31,6 +31,7 @@
             this.fJournalItemMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.fDeleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fRenameMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fSplitter = new System.Windows.Forms.Splitter();
             this.fJournalItemMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,7 +45,7 @@
             this.fAgeList.HideSelection = false;
             this.fAgeList.Location = new System.Drawing.Point(0, 0);
             this.fAgeList.Name = "fAgeList";
-            this.fAgeList.Size = new System.Drawing.Size(181, 431);
+            this.fAgeList.Size = new System.Drawing.Size(175, 431);
             this.fAgeList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fAgeList.TabIndex = 0;
             this.fAgeList.UseCompatibleStateImageBehavior = false;
@@ -65,9 +66,9 @@
             this.fMailList.FullRowSelect = true;
             this.fMailList.GridLines = true;
             this.fMailList.LabelEdit = true;
-            this.fMailList.Location = new System.Drawing.Point(181, 0);
+            this.fMailList.Location = new System.Drawing.Point(175, 0);
             this.fMailList.Name = "fMailList";
-            this.fMailList.Size = new System.Drawing.Size(259, 431);
+            this.fMailList.Size = new System.Drawing.Size(265, 431);
             this.fMailList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fMailList.TabIndex = 1;
             this.fMailList.UseCompatibleStateImageBehavior = false;
@@ -86,7 +87,7 @@
             this.fDeleteMenuItem,
             this.fRenameMenuItem});
             this.fJournalItemMenu.Name = "fJournalItemMenu";
-            this.fJournalItemMenu.Size = new System.Drawing.Size(153, 70);
+            this.fJournalItemMenu.Size = new System.Drawing.Size(111, 48);
             // 
             // fDeleteMenuItem
             // 
@@ -102,14 +103,23 @@
             this.fRenameMenuItem.Name = "fRenameMenuItem";
             this.fRenameMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N)));
             this.fRenameMenuItem.ShowShortcutKeys = false;
-            this.fRenameMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.fRenameMenuItem.Size = new System.Drawing.Size(110, 22);
             this.fRenameMenuItem.Text = "Re&name";
             this.fRenameMenuItem.Click += new System.EventHandler(this.IRenameKiItem);
+            // 
+            // fSplitter
+            // 
+            this.fSplitter.Location = new System.Drawing.Point(175, 0);
+            this.fSplitter.Name = "fSplitter";
+            this.fSplitter.Size = new System.Drawing.Size(3, 431);
+            this.fSplitter.TabIndex = 2;
+            this.fSplitter.TabStop = false;
             // 
             // KiMailControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.fSplitter);
             this.Controls.Add(this.fMailList);
             this.Controls.Add(this.fAgeList);
             this.Name = "KiMailControl";
@@ -128,5 +138,6 @@
         private System.Windows.Forms.ContextMenuStrip fJournalItemMenu;
         private System.Windows.Forms.ToolStripMenuItem fDeleteMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fRenameMenuItem;
+        private System.Windows.Forms.Splitter fSplitter;
     }
 }

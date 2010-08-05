@@ -54,7 +54,7 @@ namespace MUd {
         }
 
         protected override void ISave(object sender, EventArgs e) {
-            fTextNode.Text = fTextBox.Text;
+            fTextNode.Text = fTextBox.Text.Replace("\r\n", "\n");
             fParent.AuthCli.SaveVaultNode(Guid.NewGuid(), fTextNode.ID, fTextNode.BaseNode.ToArray());
 
             fRevertButton.Enabled = false;

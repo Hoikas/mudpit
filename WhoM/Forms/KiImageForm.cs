@@ -34,7 +34,7 @@ namespace MUd {
         protected override void IExport(object sender, EventArgs e) {
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.FileName = fImage.ImageName;
-            sfd.Filter = "JPEG Image (*jpg)|*.jpg";
+            sfd.Filter = "JPEG Image (*.jpg)|*.jpg";
             if (sfd.ShowDialog(this) == DialogResult.OK)
                 fPictureBox.Image.Save(sfd.FileName, ImageFormat.Jpeg);
         }

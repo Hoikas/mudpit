@@ -348,7 +348,8 @@ namespace MUd {
                     fBuddyCtrl.SetFolder(fBaseNodes[EStandardNode.kBuddyListFolder]);
 
             if (tag == "kimail")
-                if (fBaseNodes.ContainsKey(EStandardNode.kAgeJournalsFolder))
+                if (fBaseNodes.ContainsKey(EStandardNode.kAgeJournalsFolder) && 
+                    fBaseNodes.ContainsKey(EStandardNode.kInboxFolder))
                     fKiMailCtrl.SetFolder(fBaseNodes[EStandardNode.kAgeJournalsFolder], fBaseNodes[EStandardNode.kInboxFolder]);
 
             if (tag == "neighbors")
