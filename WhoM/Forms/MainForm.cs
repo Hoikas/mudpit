@@ -39,9 +39,10 @@ namespace MUd {
             InitializeComponent();
 
             fBuddyCtrl.Parent = this;
-            fPublicAgesCtrl.Parent = this;
+            fKiMailCtrl.Parent = this;
             fNeighborsCtrl.CanRemove = false; //NO!!!!!!!!!!!!!!!!!
             fNeighborsCtrl.Parent = this;
+            fPublicAgesCtrl.Parent = this;
             fRecentsCtrl.Parent = this;
 
 #if !DEBUG
@@ -84,6 +85,22 @@ namespace MUd {
                     RegisterAuthCB(trans, func, args);
                 }
             }
+        }
+
+        public int GetChildCount(uint nodeID) {
+            //Be careful!
+            //If the node's tree has not been fetched, this may errouneously return 0!
+            if (fVaultTree.ContainsKey(nodeID))
+                return fVaultTree[nodeID].Count;
+            else
+                return 0;
+        }
+
+        public bool HasChild(uint parentID, uint childID) {
+            if (fVaultTree.ContainsKey(parentID))
+                return fVaultTree[parentID].Contains(childID);
+            else
+                return false;
         }
         #endregion
 
@@ -330,6 +347,10 @@ namespace MUd {
                 if (fBaseNodes.ContainsKey(EStandardNode.kBuddyListFolder))
                     fBuddyCtrl.SetFolder(fBaseNodes[EStandardNode.kBuddyListFolder]);
 
+            if (tag == "kimail")
+                if (fBaseNodes.ContainsKey(EStandardNode.kAgeJournalsFolder))
+                    fKiMailCtrl.SetFolder(fBaseNodes[EStandardNode.kAgeJournalsFolder], fBaseNodes[EStandardNode.kInboxFolder]);
+
             if (tag == "neighbors")
                 if (fBaseNodes.ContainsKey(EStandardNode.kHoodMembersFolder))
                     fNeighborsCtrl.SetFolder(fBaseNodes[EStandardNode.kHoodMembersFolder]);
@@ -362,6 +383,9 @@ namespace MUd {
                 if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
                     fRecentsCtrl.AddPlayerInfo(node);
             }
+
+            if (node.NodeType == ENodeType.kNodeImage || node.NodeType == ENodeType.kNodeTextNote)
+                fKiMailCtrl.AddNode(node, parentID);
         }
 
         private void IAddFolderToPanes(VaultNode node) {
@@ -396,6 +420,14 @@ namespace MUd {
                     //Yep! Grab children :)
                     FetchChildren(node.ID, new Action<VaultNode>(IAddFolderToPanes));
                 }
+            }
+
+            //Are these KI Mail Folders?
+            if (node.NodeType == ENodeType.kNodeFolder) {
+                VaultFolderNode folder = new VaultFolderNode(node);
+                if (folder.FolderType == EStandardNode.kAgeJournalsFolder) fBaseNodes.Add(EStandardNode.kAgeJournalsFolder, node.ID);
+                if (folder.FolderType == EStandardNode.kInboxFolder) fBaseNodes.Add(EStandardNode.kInboxFolder, node.ID);
+
             }
 
             //FIXME: This is a strange hack...
@@ -471,6 +503,9 @@ namespace MUd {
                 fNeighborsCtrl.RemoveNode(node);
             if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
                 fRecentsCtrl.RemoveNode(node);
+
+            if (node.NodeType == ENodeType.kNodeImage || node.NodeType == ENodeType.kNodeTextNote)
+                fKiMailCtrl.RemoveNode(node);
         }
 
         private void IShowError(string text) {
@@ -505,6 +540,9 @@ namespace MUd {
                 IDoNeighborUpdate(info, alerted);
                 fRecentsCtrl.UpdateNode(info);
             }
+
+            if (node.NodeType == ENodeType.kNodeImage || node.NodeType == ENodeType.kNodeTextNote)
+                fKiMailCtrl.UpdateNode(node);
         }
     }
 }

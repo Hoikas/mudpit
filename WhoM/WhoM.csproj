@@ -70,6 +70,12 @@
     <Compile Include="Forms\ExceptionForm.Designer.cs">
       <DependentUpon>ExceptionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\KiMailBaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\KiMailBaseForm.Designer.cs">
+      <DependentUpon>KiMailBaseForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\OptionsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -89,7 +95,29 @@
     <Compile Include="Controls\OnlinePlayers.Designer.cs">
       <DependentUpon>OnlinePlayers.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\KiMailControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\KiMailControl.Designer.cs">
+      <DependentUpon>KiMailControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\KiImageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\KiImageForm.Designer.cs">
+      <DependentUpon>KiImageForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\KiNoteForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\KiNoteForm.Designer.cs">
+      <DependentUpon>KiNoteForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Controls\KiMailControl.resx">
+      <DependentUpon>KiMailControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Controls\PublicAgesControl.resx">
       <DependentUpon>PublicAgesControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -105,6 +133,14 @@
       <DependentUpon>ExceptionForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\KiImageForm.resx">
+      <DependentUpon>KiImageForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\KiMailBaseForm.resx">
+      <DependentUpon>KiMailBaseForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -115,6 +151,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\OptionsForm.resx">
       <DependentUpon>OptionsForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\KiNoteForm.resx">
+      <DependentUpon>KiNoteForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -164,6 +204,8 @@
     <Content Include="book.ico" />
     <Content Include="Resources\bullet_green.png" />
     <Content Include="Resources\bullet_red.png" />
+    <None Include="Resources\image-x-generic.png" />
+    <None Include="Resources\text-x-generic.png" />
     <Content Include="Resources\view-refresh.png" />
     <None Include="Resources\chatmsg.wav" />
   </ItemGroup>

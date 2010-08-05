@@ -397,5 +397,8 @@ namespace MUd {
             get { return fBase.fText[0]; }
             set { fBase.fText[0] = value; }
         }
+
+        public VaultTextNode() : base(ENodeType.kNodeTextNote) { }
+        public VaultTextNode(VaultNode node) : base(node) { }
     }
 }

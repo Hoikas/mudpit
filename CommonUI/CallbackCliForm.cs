@@ -73,6 +73,7 @@ namespace MUd {
             fAuthCli.VaultNodeFetched += new AuthVaultNodeFetched(OnAuthVaultNodeFetched);
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(OnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(OnAuthVaultNodeRemoved);
+            fAuthCli.VaultNodeRemoveReply += new AuthResult(OnAuthVaultNodeRemoveReply);
             fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(OnAuthVaultTreeFetched);
 
             //File Client
@@ -127,11 +128,17 @@ namespace MUd {
         protected virtual void OnAuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs) {
             //Simply fire the callback...
             //We don't know what the caller wants these nodes for anyway...
-            // - Method: ISomething(uint[] nodeIDs)
+            // - Method: ISomething(uint[] nodeIDs, ...)
             IFireAuthCallback(transID, new object[] { nodeIDs });
         }
 
         protected virtual void OnAuthVaultNodeRemoved(uint parentID, uint childID) { }
+
+        protected void OnAuthVaultNodeRemoveReply(uint transID, ENetError result) {
+            //Fire callback
+            // - Method: ISomething(ENetError result, ...)
+            IFireAuthCallback(transID, new object[] { result });
+        }
 
         protected virtual void OnAuthVaultTreeFetched(uint transID, ENetError result, VaultNodeRef[] refs) {
             //Fire callback
