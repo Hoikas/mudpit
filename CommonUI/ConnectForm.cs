@@ -187,6 +187,8 @@ namespace MUd {
             //Set encryption keys...
             fParent.AuthCli.N = OurShard.fAuth.N;
             fParent.AuthCli.X = OurShard.fAuth.X;
+            fParent.GameCli.N = OurShard.fGame.N;
+            fParent.GameCli.X = OurShard.fGame.X;
             fParent.GateCli.N = OurShard.fGate.N;
             fParent.GateCli.X = OurShard.fGate.X;
 

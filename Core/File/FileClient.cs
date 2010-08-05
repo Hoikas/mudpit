@@ -125,7 +125,7 @@ namespace MUd {
         private void IGotBuildID() {
             File_BuildIdReply reply = new File_BuildIdReply();
             reply.Read(fStream);
-            if (BuildID != null)
+            if (GotBuildID != null)
                 GotBuildID(reply.fTransID, reply.fResult, reply.fBuildID);
         }
     }

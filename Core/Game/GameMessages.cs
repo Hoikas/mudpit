@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -69,6 +70,34 @@ namespace MUd {
     public struct Game_PropagateBuffer {
         public CreatableID fMsgType;
         public byte[] fBuffer;
+
+        public NetMessage NetMsg {
+            get {
+                MemoryStream ms = new MemoryStream(fBuffer);
+                UruStream s = new UruStream(ms);
+
+                NetMessage msg = Factory.Create(fMsgType) as NetMessage;
+                msg.Read(s); //No pCre Index
+
+                s.Close();
+                ms.Close();
+                return msg;
+            }
+
+            set {
+                if (value == null) return;
+
+                MemoryStream ms = new MemoryStream();
+                UruStream s = new UruStream(ms);
+
+                value.Write(s);
+                fBuffer = ms.ToArray();
+                fMsgType = value.ClassIndex;
+
+                s.Close();
+                ms.Close();
+            }
+        }
 
         public void Read(UruStream s) {
             fMsgType = (CreatableID)s.ReadUInt();

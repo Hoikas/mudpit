@@ -8,6 +8,8 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace MUd {
+    public delegate void Action<T1, T2, T3, T4, T5>(T1 o1, T2 o2, T3 o3, T4 o4, T5 o5);
+
     public partial class CallbackCliForm : Form {
         struct Callback {
             public Delegate fFunc;
@@ -60,6 +62,7 @@ namespace MUd {
             InitializeComponent();
 
             //Auth Client
+            fAuthCli.GotAge += new AuthAgeReply(OnAuthGotAge);
             fAuthCli.GotPublicAges += new AuthGotPublicAges(OnAuthGotPublicAges);
             fAuthCli.KickedOff += new AuthKickedOff(OnAuthKickedOff);
             fAuthCli.LoggedIn += new AuthLoggedIn(OnAuthLoggedIn);
@@ -75,11 +78,21 @@ namespace MUd {
             //File Client
             fFileCli.GotBuildID += new FileBuildIdReply(OnFileGotBuildID);
 
+            //Game Client
+            fGameCli.AgeJoined += new GameAgeJoined(OnGameAgeJoined);
+            fGameCli.BufferPropagated += new GameRawBuffer(OnGameBufferPropagated);
+
             //Gate Client
             fGateCli.GotFileSrvIP += new GateIP(OnGateGotFileSrvIP);
         }
 
         #region AuthCli Event Handlers
+        protected virtual void OnAuthGotAge(uint transID, ENetError result, Guid instance, uint mcpid, uint vaultID, System.Net.IPAddress gameSrv) {
+            //Fire callback
+            // - Method: ISomething(ENetError result, Guid instance, uint mcpid, uint vaultID, IPAddress gameSrv ...)
+            IFireAuthCallback(transID, new object[] { result, instance, mcpid, vaultID, gameSrv });
+        }
+
         protected virtual void OnAuthGotPublicAges(uint transID, ENetError result, NetAgeInfo[] ages) {
             //Fire callback
             // - Method: ISomething(NetAgeInfo[] ages, ...)
@@ -132,6 +145,17 @@ namespace MUd {
             //Fire callback
             // - Method ISomething(uint buildID, ...)
             IFireFileCallback(transID, new object[] { buildID });
+        }
+        #endregion
+
+        #region Game Client Event Handlers
+        protected virtual void OnGameAgeJoined(uint transID, ENetError result) {
+            //Fire callback
+            // - Method: ISomething(ENetError result, ..)
+            IFireGameCallback(transID, new object[] { result });
+        }
+
+        protected virtual void OnGameBufferPropagated(NetMessage msg, bool handled) {
         }
         #endregion
 

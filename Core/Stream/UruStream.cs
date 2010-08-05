@@ -59,6 +59,10 @@ namespace MUd {
             return fReader.ReadBytes(count);
         }
 
+        public double ReadDouble() {
+            return fReader.ReadDouble();
+        }
+
         public string ReadSafeString() {
             short info = fReader.ReadInt16();
             if ((info & 0xF000) == 0) fReader.ReadInt16(); //Garbage
@@ -72,6 +76,19 @@ namespace MUd {
                 return Encoding.UTF8.GetString(data);
             } else return String.Empty;
             
+        }
+
+        public string ReadSafeWString() {
+            int size = (int)(fReader.ReadInt16() & 0x0FFF);
+            byte[] data = ReadBytes(size * 2);
+            if ((data[0] & 0x80) != 0)
+                for (int i = 0; i < data.Length; i++)
+                    data[i] = (byte)(~data[i]);
+            return Encoding.Unicode.GetString(data);
+        }
+
+        public short ReadShort() {
+            return fReader.ReadInt16();
         }
 
         public int ReadInt() {
@@ -137,6 +154,10 @@ namespace MUd {
             fWriter.Write(data);
         }
 
+        public void WriteDouble(double data) {
+            fWriter.Write(data);
+        }
+
         public void WriteInt(int data) {
             fWriter.Write(data);
         }
@@ -153,6 +174,22 @@ namespace MUd {
             for (int i = 0; i < info; i++)
                 str[i] = (byte)(~buf[i]);
             WriteBytes(str);
+        }
+
+        public void WriteSafeWString(string data) {
+            if (data == null)
+                data = String.Empty;
+
+            byte[] buf = Encoding.Unicode.GetBytes(data);
+            short info = (short)((buf.Length / 2) | 0xF000);
+            for (int i = 0; i < buf.Length; i++)
+                buf[i] = (byte)(~buf[i]);
+            WriteBytes(buf);
+            fWriter.Write((short)0);
+        }
+
+        public void WriteShort(short data) {
+            fWriter.Write(data);
         }
 
         public void WriteUInt(uint data) {

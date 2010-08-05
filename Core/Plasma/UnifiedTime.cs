@@ -6,35 +6,43 @@ using System.Text;
 namespace MUd {
     public class UnifiedTime {
 
-        DateTime fTime = DateTime.UtcNow;
-        public DateTime Value {
-            get { return fTime; }
-            set { fTime = value; }
+        private uint fSeconds;
+        private uint fMicroSecs;
+
+        public bool AtEpoch {
+            get { return (DateTime == Epoch); }
         }
 
-        public void Read(UruStream s) {
-            uint secs = s.ReadUInt();
-            uint micros = s.ReadUInt();
+        public DateTime DateTime {
+            get {
+                DateTime dt = Epoch.AddSeconds(Convert.ToDouble(fSeconds));
+                dt.AddTicks(Convert.ToInt64(fMicroSecs / 100));
+                return dt;
+            }
 
-            //secs == Seconds since January 1, 1970
-            //microseconds == microseconds to add to secs
-            //    To convert, to DateTime, we must add to the Unix epoch
-            //    Micros need to be converted to milliseconds
-            //    Note: Use double type to try to preserve data until we must finally round
-            DateTime epoch = new DateTime(1970, 1, 1);
-            TimeSpan ts = new TimeSpan((Convert.ToInt64(secs) * TimeSpan.TicksPerSecond) + 
-                                       Convert.ToInt64((Convert.ToDouble(micros) / 1000.0) * Convert.ToDouble(TimeSpan.TicksPerMillisecond)));
-
-            //Now create the time
-            fTime = epoch.Add(ts);
+            set {
+                TimeSpan ts = (value - Epoch);
+                fSeconds = Convert.ToUInt32(ts.TotalSeconds);
+                //Too lazy to use microseconds. Maybe later.
+            }
         }
 
-        public void Write(UruStream s) {
-            TimeSpan ts = fTime.Subtract(new DateTime(1970, 1, 1));
+        private DateTime Epoch {
+            get { return new DateTime(1970, 1, 1, 0, 0, 0); }
+        }
 
-            //Easy enough :)
-            s.WriteUInt(Convert.ToUInt32(ts.Seconds));
-            s.WriteUInt(Convert.ToUInt32(ts.Milliseconds * 1000)); 
+        public UnifiedTime() { this.DateTime = Epoch; }
+        public UnifiedTime(DateTime dt) { this.DateTime = dt; }
+        public UnifiedTime(UruStream s) { Read(s); }
+
+        public void Read(UruStream bs) {
+            fSeconds = bs.ReadUInt();
+            fMicroSecs = bs.ReadUInt();
+        }
+
+        public void Write(UruStream bs) {
+            bs.WriteUInt(fSeconds);
+            bs.WriteUInt(fMicroSecs);
         }
     }
 }
