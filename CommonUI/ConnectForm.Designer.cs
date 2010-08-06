@@ -212,6 +212,7 @@
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.Text = "Connect to a Shard";
+            this.Shown += new System.EventHandler(this.IFormShown);
             ((System.ComponentModel.ISupportInitialize)(this.fRefreshImage)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

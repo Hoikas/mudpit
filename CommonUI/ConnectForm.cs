@@ -213,6 +213,11 @@ namespace MUd {
             }
         }
 
+        private void IFormShown(object sender, EventArgs e) {
+            if (fAutoConnect.Checked && fCanAutoConnect)
+                IBeginLoginProcess(null, null);
+        }
+
         private void IRememberMeChecked(object sender, EventArgs e) {
             fAutoConnect.Enabled = fRememberMe.Checked;
         }

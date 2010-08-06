@@ -261,7 +261,7 @@ namespace MUd {
 
         #region Log Methods
         protected void EnableLogging(string logname) {
-            if (fLogger != null)
+            if (fLogger == null)
                 fLogger = new LogProcessor(logname);
         }
 

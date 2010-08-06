@@ -37,6 +37,7 @@ namespace MUd {
 
         public MainForm() : base() {
             InitializeComponent();
+            EnableLogging("WhoM");
 
             fBuddyCtrl.Parent = this;
             fKiMailCtrl.Parent = this;
@@ -201,10 +202,10 @@ namespace MUd {
 
         private void IConnect(object sender, EventArgs e) {
             ConnectForm cf = new ConnectForm();
+            cf.Parent = this;
             if (Prefrences.RememberLogin) {
                 cf.AutoConnect = Prefrences.AutoConnect;
                 cf.CanAutoConnect = (sender == null ? true : false);
-                cf.Parent = this;
                 cf.Password = Prefrences.Password;
                 cf.RememberMe = true;
                 cf.Username = Prefrences.Username;
@@ -214,6 +215,13 @@ namespace MUd {
             if (cf.ShowDialog(this) == DialogResult.OK) {
                 fConnectMenuItem.Enabled = false;
                 fDisconnectMenuItem.Enabled = true;
+
+                //Set the registry prefs from the ConnectForm
+                Prefrences.AutoConnect = cf.AutoConnect;
+                Prefrences.Password = cf.Password;
+                Prefrences.RememberLogin = cf.RememberMe;
+                Prefrences.Shard = Prefrences.Shard;
+                Prefrences.Username = cf.Username;
 
                 //Attempt to select the last used avatar [by index]
                 //If there aren't that many avatars, use the first one.
