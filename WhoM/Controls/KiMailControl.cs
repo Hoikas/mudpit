@@ -47,6 +47,8 @@ namespace MUd {
         }
 
         private void IAddKiItem(VaultNode node) {
+            if (fAgeList.FocusedItem == null) return;
+
             //Callbacks can be evil sometimes...
             //Make sure that the incoming node is for the CURRENT age
             VaultNode tag = (VaultNode)fAgeList.FocusedItem.Tag;
@@ -77,6 +79,12 @@ namespace MUd {
             VaultNode tag = (VaultNode)fAgeList.FocusedItem.Tag;
             if (tag.ID == parentID)
                 IAddKiItem(node);
+        }
+
+        public void Clear() {
+            fAgeList.Items.Clear();
+            fMailList.Items.Clear();
+            fInitialized = false;
         }
 
         private void IDeleteKiItem(object sender, EventArgs e) {

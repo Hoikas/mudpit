@@ -247,6 +247,12 @@ namespace MUd {
         #endregion
 
         protected void FireException(Exception e) {
+            //Sometimes, we might get exceptions due to a disconnect
+            //Eg. Client tried to send data immediately after we DCed
+            //We'll eat those exceptions in Release mode
+#if !DEBUG
+            if (Connected)
+#endif
             ExceptionHandler(e);
         }
 

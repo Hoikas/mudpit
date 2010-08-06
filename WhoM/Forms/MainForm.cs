@@ -524,6 +524,7 @@ namespace MUd {
             fNodes.Clear();
 
             fBuddyCtrl.Clear();
+            fKiMailCtrl.Clear();
             fNeighborsCtrl.Clear();
             fPublicAgesCtrl.Clear();
             fRecentsCtrl.Clear();
