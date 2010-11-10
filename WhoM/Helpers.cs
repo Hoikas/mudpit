@@ -70,7 +70,7 @@ namespace MUd {
         }
 
         public static string Shard {
-            get { return BaseKey.GetValue("LastShard", "184.73.198.22").ToString(); }
+            get { return BaseKey.GetValue("LastShard", "CYAN - MOULa").ToString(); }
             set {
                 RegistryKey key = BaseKey;
                 key.SetValue("LastShard", value);

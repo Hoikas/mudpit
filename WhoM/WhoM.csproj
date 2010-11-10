@@ -206,6 +206,7 @@
     <Content Include="Resources\bullet_red.png" />
     <None Include="Resources\image-x-generic.png" />
     <None Include="Resources\text-x-generic.png" />
+    <None Include="Resources\start-here.png" />
     <Content Include="Resources\view-refresh.png" />
     <None Include="Resources\chatmsg.wav" />
   </ItemGroup>

@@ -14,6 +14,7 @@ namespace MUd {
         enum Icon {
             Text,
             Image,
+            MarkerList,
         }
 
         private MainForm fParent;
@@ -30,6 +31,7 @@ namespace MUd {
             fMailList.SmallImageList = new ImageList();
             fMailList.SmallImageList.Images.Add(Resources.text_x_generic);
             fMailList.SmallImageList.Images.Add(Resources.image_x_generic);
+            fMailList.SmallImageList.Images.Add(Resources.start_here);
         }
 
         private void IAddJournalFolder(VaultNode node) {
@@ -55,12 +57,15 @@ namespace MUd {
             if (!fParent.HasChild(tag.ID, node.ID))
                 return;
 
-            ListViewItem lvi = new ListViewItem(node.fString64[0]); //String64_1 is pretty much always the title...
+            ListViewItem lvi = new ListViewItem(IGetTitle(node)); //String64_1 is pretty much always the title...
             lvi.Tag = node;
 
             switch (node.NodeType) {
                 case ENodeType.kNodeImage:
                     lvi.ImageIndex = (int)Icon.Image;
+                    break;
+                case ENodeType.kNodeMarkerList:
+                    lvi.ImageIndex = (int)Icon.MarkerList;
                     break;
                 case ENodeType.kNodeTextNote:
                     lvi.ImageIndex = (int)Icon.Text;
@@ -92,9 +97,21 @@ namespace MUd {
             VaultNode cTag = (VaultNode)fMailList.FocusedItem.Tag;
             VaultNode pTag = (VaultNode)fAgeList.FocusedItem.Tag;
 
-            DialogResult dr = MessageBox.Show(String.Format("Are you sure you want to delete \"{0}\"?", cTag.fString64[0]), "Delete KI Mail", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult dr = MessageBox.Show(String.Format("Are you sure you want to delete \"{0}\"?", IGetTitle(cTag)), "Delete KI Mail", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (dr == DialogResult.Yes)
                 fParent.AuthCli.RemoveVaultNode(pTag.ID, cTag.ID);
+        }
+
+        private string IGetTitle(VaultNode node) {
+            switch (node.NodeType) {
+                case ENodeType.kNodeImage:
+                case ENodeType.kNodeTextNote:
+                    return node.fString64[0];
+                case ENodeType.kNodeMarkerList:
+                    return node.fText[0];
+            }
+
+            return String.Empty;
         }
 
         private void IJournalSelected(object sender, ListViewItemSelectionChangedEventArgs e) {
@@ -113,13 +130,17 @@ namespace MUd {
                 kiform = new KiImageForm(node);
             else if (node.NodeType == ENodeType.kNodeTextNote)
                 kiform = new KiNoteForm(node);
-            kiform.Parent = fParent;
-            kiform.Show(fParent);
+
+            //In case we get something weird...
+            if (kiform != null) {
+                kiform.Parent = fParent;
+                kiform.Show(fParent);
+            }
         }
 
         private void IKiItemRenamed(object sender, LabelEditEventArgs e) {
             VaultNode node = (VaultNode)fMailList.Items[e.Item].Tag;
-            node.fString64[0] = e.Label;
+            ISetTitle(node, e.Label);
 
             //Cancel the edit...
             //Why? Let the rename be done by the server
@@ -163,12 +184,24 @@ namespace MUd {
             IAddJournalFolder(folder.BaseNode);
         }
 
+        private void ISetTitle(VaultNode node, string text) {
+            switch (node.NodeType) {
+                case ENodeType.kNodeImage:
+                case ENodeType.kNodeTextNote:
+                    node.fString64[0] = text;
+                    break;
+                case ENodeType.kNodeMarkerList:
+                    node.fText[0] = text;
+                    break;
+            }
+        }
+
         public void UpdateNode(VaultNode node) {
             for (int i = 0; i < fMailList.Items.Count; i++) {
                 VaultNode tag = (VaultNode)fMailList.Items[i].Tag;
                 if (tag.ID == node.ID) {
                     fMailList.Items[i].Tag = node;
-                    fMailList.Items[i].Text = node.fString64[0];
+                    fMailList.Items[i].Text = IGetTitle(node);
 
                     //We must resort manually...
                     fMailList.Sort();

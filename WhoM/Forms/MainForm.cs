@@ -220,7 +220,7 @@ namespace MUd {
                 Prefrences.AutoConnect = cf.AutoConnect;
                 Prefrences.Password = cf.Password;
                 Prefrences.RememberLogin = cf.RememberMe;
-                Prefrences.Shard = Prefrences.Shard;
+                Prefrences.Shard = cf.WantShard;
                 Prefrences.Username = cf.Username;
 
                 //Attempt to select the last used avatar [by index]
@@ -544,15 +544,19 @@ namespace MUd {
         }
 
         private void IUpdateNode(VaultNode node) {
-            if (node.NodeType == ENodeType.kNodePlayerInfo) {
-                VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
-                bool alerted = IDoBuddyUpdate(info, false);
-                IDoNeighborUpdate(info, alerted);
-                fRecentsCtrl.UpdateNode(info);
+            switch (node.NodeType) {
+                case ENodeType.kNodeImage:
+                case ENodeType.kNodeMarkerList:
+                case ENodeType.kNodeTextNote:
+                    fKiMailCtrl.UpdateNode(node);
+                    break;
+                case ENodeType.kNodePlayerInfo:
+                    VaultPlayerInfoNode info = new VaultPlayerInfoNode(node);
+                    bool alerted = IDoBuddyUpdate(info, false);
+                    IDoNeighborUpdate(info, alerted);
+                    fRecentsCtrl.UpdateNode(info);
+                    break;
             }
-
-            if (node.NodeType == ENodeType.kNodeImage || node.NodeType == ENodeType.kNodeTextNote)
-                fKiMailCtrl.UpdateNode(node);
         }
     }
 }

@@ -224,6 +224,7 @@ namespace MUd {
 
         private void IShardChanged(object sender, EventArgs e) {
             fShardHostBox.Text = OurShard.fGate.fHost;
+            fPrefShard = OurShard.fName;
         }
         #endregion
 
