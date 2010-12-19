@@ -36,14 +36,19 @@ namespace MUd {
             fBaseStream.Close();
         }
 
-        public void FlushWriter() {
+        public long FlushWriter() {
+            long len = 0;
+
             if (fBuffering) {
                 ((MemoryStream)fWriter.BaseStream).WriteTo(fBaseStream);
+                len = fWriter.BaseStream.Length;
                 fWriter.Close();
 
                 fWriter = new BinaryWriter(fBaseStream);
                 fBuffering = false;
             }
+
+            return len;
         }
 
         public bool ReadBool() {
