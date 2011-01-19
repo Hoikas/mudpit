@@ -34,6 +34,11 @@ namespace MUd {
         }
         #endregion
 
+        Guid fAcctUuid;
+        public Guid AcctUUID {
+            get { return fAcctUuid; }
+        }
+
         public bool AutoConnect {
             get { return fAutoConnect.Checked; }
             set { fAutoConnect.Checked = value; }
@@ -88,6 +93,9 @@ namespace MUd {
             fParent.AuthCli.BranchID = 1;
             fParent.AuthCli.ProductID = kUruExplorer;
             fParent.AuthCli.Connect();
+            fParent.GameCli.BuildID = buildID;
+            fParent.GameCli.BranchID = 1;
+            fParent.GameCli.ProductID = kUruExplorer;
 
             uint transID = fParent.AuthCli.Login(fUserBox.Text, fPasswordBox.Text, fParent.AuthCli.Challenge);
             fParent.RegisterAuthCB(transID, new Action<ENetError, uint, uint[], Guid>(IEndLogin));
@@ -136,7 +144,8 @@ namespace MUd {
         }
 
         private void IEndLogin(ENetError result, uint flags, uint[] droid, Guid uuid) {
-            fParent.LogInfo(String.Format("Login Complete [RESULT: {0}]", result.ToString().Substring(4)));
+            fParent.LogInfo(String.Format("Login Complete [RESULT: {0}]", result.ToString().Substring(7)));
+            fAcctUuid = uuid;
 
             switch (result) {
                 case ENetError.kNetErrAccountBanned:

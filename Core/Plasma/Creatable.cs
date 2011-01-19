@@ -12,6 +12,7 @@ namespace MUd {
         LoadCloneMsg              = 0x0253,
         NetMsgGameMessage         = 0x026B,
         NetMsgStream              = 0x026C,
+        NetMsgMembersListReq      = 0x02AD,
         NetMsgGameMessageDirected = 0x032E,
         KIMsg                     = 0x0364,
         LoadAvatarMsg             = 0x03B1,
@@ -38,6 +39,12 @@ namespace MUd {
     public static class Factory {
         public static Creatable Create(CreatableID pCre) {
             switch (pCre) {
+                case CreatableID.KIMsg:
+                    throw new NotSupportedException();
+                case CreatableID.NetMsgLoadClone:
+                    return new NetMsgLoadClone();
+                case CreatableID.NetMsgPlayerPage:
+                    throw new NotSupportedException();
                 case CreatableID.NULL:
                     return null;
                 default:

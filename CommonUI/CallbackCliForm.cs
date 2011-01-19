@@ -9,6 +9,7 @@ using System.Windows.Forms;
 
 namespace MUd {
     public delegate void Action<T1, T2, T3, T4, T5>(T1 o1, T2 o2, T3 o3, T4 o4, T5 o5);
+    public delegate void Action<T1, T2, T3, T4, T5, T6>(T1 o1, T2 o2, T3 o3, T4 o4, T5 o5, T6 o6);
 
     public partial class CallbackCliForm : Form {
         struct Callback {
@@ -74,6 +75,7 @@ namespace MUd {
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(OnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(OnAuthVaultNodeRemoved);
             fAuthCli.VaultNodeRemoveReply += new AuthResult(OnAuthVaultNodeRemoveReply);
+            fAuthCli.VaultNodeSaveReply += new AuthResult(OnAuthVaultNodeSaveReply);
             fAuthCli.VaultTreeFetched += new AuthVaultTreeFetched(OnAuthVaultTreeFetched);
 
             //File Client
@@ -135,6 +137,12 @@ namespace MUd {
         protected virtual void OnAuthVaultNodeRemoved(uint parentID, uint childID) { }
 
         protected void OnAuthVaultNodeRemoveReply(uint transID, ENetError result) {
+            //Fire callback
+            // - Method: ISomething(ENetError result, ...)
+            IFireAuthCallback(transID, new object[] { result });
+        }
+
+        protected void OnAuthVaultNodeSaveReply(uint transID, ENetError result) {
             //Fire callback
             // - Method: ISomething(ENetError result, ...)
             IFireAuthCallback(transID, new object[] { result });

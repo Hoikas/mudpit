@@ -228,7 +228,15 @@ namespace MUd {
 
         public uint Login(string acctName, string acctPW, uint srvChal) {
             int clientChal = BitConverter.ToInt32(RNG.Random(4), 0);
-            return Login(acctName, ShaHash.HashLoginInfo(acctName, acctPW, clientChal, srvChal), clientChal);
+
+            //Note: Usernames without "@" are SHA-1
+            //Otherwise, they are SHA-0 with the strcopy bug
+            if (acctName.IndexOf('@') > -1) {
+                return Login(acctName, ShaHash.HashLoginInfo(acctName, acctPW, clientChal, srvChal), clientChal);
+            } else {
+                ShaHash temp = ShaHash.HashPW(acctPW);
+                return Login(acctName, temp, clientChal);
+            }
         }
 
         public uint Login(string acctName, ShaHash acctPW, int cliChal) {

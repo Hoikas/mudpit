@@ -213,8 +213,12 @@ namespace MUd {
             //TODO: Handle specific NetMessages
             //      Later....
 
-            if (BufferPropagated != null)
-                BufferPropagated(buffer.NetMsg, handled);
+            try {
+                if (BufferPropagated != null)
+                    BufferPropagated(buffer.NetMsg, handled);
+            } catch (NotSupportedException) {
+                //Unhandled buffer logic needed here...
+            }
         }
     }
 }

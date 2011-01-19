@@ -104,8 +104,13 @@ namespace MUd {
                 }
 
                 fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
-            } catch (ObjectDisposedException) { } catch (SocketException) { fSocket.Close(); } catch (Exception e) {
+            } catch (ObjectDisposedException) { 
+            } catch (SocketException) { 
+                fSocket.Close(); 
+#if !DEBUG
+            } catch (Exception e) {
                 FireException(e);
+#endif
             }
         }
 

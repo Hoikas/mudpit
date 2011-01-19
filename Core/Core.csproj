@@ -50,8 +50,6 @@
     <Compile Include="Auth\AuthClient.cs" />
     <Compile Include="Auth\AuthManifest.cs" />
     <Compile Include="Auth\AuthMessages.cs" />
-    <Compile Include="Auth\AuthServer.cs" />
-    <Compile Include="Base\Srv2Cli.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Base\Cli2Srv.cs" />
     <Compile Include="File\FileClient.cs" />

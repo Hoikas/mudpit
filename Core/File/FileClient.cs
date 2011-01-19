@@ -8,10 +8,12 @@ using System.Text;
 
 namespace MUd {
     public delegate void FileBuildIdReply(uint transID, ENetError result, uint buildID);
+    public delegate void FilePong(int pingTime);
 
     public class FileClient : Cli2SrvBase {
 
         public event FileBuildIdReply GotBuildID;
+        public event FilePong Pong;
 
         public FileClient() : base() {
             fHeader.fType = EConnType.kConnTypeCliToFile;
@@ -108,6 +110,9 @@ namespace MUd {
                         case FileSrv2Cli.BuildIdReply:
                             IGotBuildID();
                             break;
+                        case FileSrv2Cli.PingReply:
+                            IPong();
+                            break;
                         default:
                             string test = Enum.GetName(typeof(FileSrv2Cli), msg);
                             throw new NotSupportedException(msg.ToString("X") + " - " + test);
@@ -117,8 +122,13 @@ namespace MUd {
                 }
 
                 fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
-            } catch (ObjectDisposedException) { } catch (SocketException) { fSocket.Close(); } catch (Exception e) {
+            } catch (ObjectDisposedException) { 
+            } catch (SocketException) { 
+                fSocket.Close();
+#if !DEBUG
+            } catch (Exception e) {
                 FireException(e);
+#endif
             }
         }
 
@@ -127,6 +137,13 @@ namespace MUd {
             reply.Read(fStream);
             if (GotBuildID != null)
                 GotBuildID(reply.fTransID, reply.fResult, reply.fBuildID);
+        }
+
+        private void IPong() {
+            File_PingPong pong = new File_PingPong();
+            pong.Read(fStream);
+            if (Pong != null)
+                Pong(pong.fPingTime);
         }
     }
 }

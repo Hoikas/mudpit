@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -72,6 +73,16 @@ namespace MUd {
                     fFlags &= ~MsgFlags.kNeedsReliableSend;
                 else if (!ReliableSend && value)
                     fFlags |= MsgFlags.kNeedsReliableSend;
+            }
+        }
+
+        public bool SystemMsg {
+            get { return ((fFlags & MsgFlags.kIsSystemMessage) != 0); }
+            set {
+                if (SystemMsg && !value)
+                    fFlags &= ~MsgFlags.kIsSystemMessage;
+                else if (!ReliableSend && value)
+                    fFlags |= MsgFlags.kIsSystemMessage;
             }
         }
 
@@ -154,5 +165,20 @@ namespace MUd {
             if ((fFlags & MsgFlags.kHasAcctUUID) != 0)
                 s.WriteBytes(fAcctUuid.ToByteArray());
         }
+
+        public byte[] ToArray() {
+            MemoryStream ms = new MemoryStream();
+            UruStream s = new UruStream(ms);
+
+            Write(s);
+            byte[] buf = ms.ToArray();
+
+            s.Close();
+            ms.Close();
+
+            return buf;
+        }
     }
+
+    public sealed class NetMsgMembersListReq : NetMessage { }
 }
