@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,6 +12,25 @@
     <AssemblyName>MUd.Core</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,7 +40,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,7 +50,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -50,6 +71,7 @@
     <Compile Include="Auth\AuthClient.cs" />
     <Compile Include="Auth\AuthManifest.cs" />
     <Compile Include="Auth\AuthMessages.cs" />
+    <Compile Include="Base\Srv2Cli.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Base\Cli2Srv.cs" />
     <Compile Include="File\FileClient.cs" />
@@ -60,23 +82,11 @@
     <Compile Include="Lookup\GateClient.cs" />
     <Compile Include="Lookup\GateMessages.cs" />
     <Compile Include="LogProcessor.cs" />
-    <Compile Include="Lookup\LookupClient.cs" />
-    <Compile Include="Lookup\LookupMessages.cs" />
     <Compile Include="Base\NetCliCore.cs" />
-    <Compile Include="Plasma\AvTask.cs" />
-    <Compile Include="Plasma\Creatable.cs" />
-    <Compile Include="Plasma\Message\LoadAvatar.cs" />
-    <Compile Include="Plasma\Message\Msg.cs" />
-    <Compile Include="Plasma\NetMessage\Game.cs" />
-    <Compile Include="Plasma\NetMessage\NetMsg.cs" />
-    <Compile Include="Plasma\UnifiedTime.cs" />
-    <Compile Include="Plasma\Uoid.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShaHash.cs" />
     <Compile Include="ShardList.cs" />
-    <Compile Include="Stream\bTEA.cs" />
     <Compile Include="Stream\CryptoNetStream.cs" />
-    <Compile Include="Stream\EncryptedStream.cs" />
     <Compile Include="Stream\TokenStream.cs" />
     <Compile Include="Stream\UruStream.cs" />
     <Compile Include="Vault\VaultClient.cs" />
@@ -89,6 +99,23 @@
       <Project>{8474D033-F77C-4364-A571-0218CDB56575}</Project>
       <Name>OpenSSL</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

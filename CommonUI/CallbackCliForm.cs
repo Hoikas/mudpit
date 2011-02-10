@@ -170,7 +170,7 @@ namespace MUd {
             IFireGameCallback(transID, new object[] { result });
         }
 
-        protected virtual void OnGameBufferPropagated(NetMessage msg, bool handled) {
+        protected virtual void OnGameBufferPropagated(byte[] msg, bool handled) {
         }
         #endregion
 

@@ -36,6 +36,18 @@ namespace MUd {
             fBaseStream.Close();
         }
 
+        public byte[] EndBuffering() {
+            byte[] retval = null;
+            if (fBuffering) {
+                fBuffering = false;
+                retval = ((MemoryStream)fWriter.BaseStream).ToArray();
+                fWriter.Close();
+                fWriter = new BinaryWriter(fBaseStream);
+            }
+
+            return retval;
+        }
+
         public long FlushWriter() {
             long len = 0;
 

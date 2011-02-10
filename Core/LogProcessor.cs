@@ -8,6 +8,12 @@ using System.Threading;
 namespace MUd {
     public class LogProcessor {
 
+        private static string fLogDir = "log";
+        public static string Destination {
+            get { return fLogDir; }
+            set { fLogDir = value; }
+        }
+
         public bool IsEmpty {
             get { return (fWriter == null); }
         }
@@ -29,18 +35,16 @@ namespace MUd {
             get { return DateTime.UtcNow.ToString("MMM yyyy"); }
         }
 
-        private readonly string kSeparator = Path.DirectorySeparatorChar.ToString();
-
         public LogProcessor(string name) {
-            string path = "log" + kSeparator + fFolderMonth;
+            string path = Path.Combine("log", fFolderMonth);
             Directory.CreateDirectory(path);
-            fLocation = path + kSeparator + name;
+            fLocation = Path.Combine(path, name);
         }
 
         public LogProcessor(string name, string group) {
-            string path = "log" + kSeparator + fFolderMonth + kSeparator + group;
+            string path = Path.Combine(Path.Combine("log", fFolderMonth), group);
             Directory.CreateDirectory(path);
-            fLocation = path + kSeparator + name;
+            fLocation = Path.Combine(path, name);
         }
 
         private void IInitLog() {
@@ -76,14 +80,14 @@ namespace MUd {
         }
 
         public void DumpToFile(byte[] dump) {
-            string dir = "log" + kSeparator + "dumps";
+            string dir = Path.Combine("log", "dumps");
             if (!Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
             string filename = Path.GetRandomFileName();
             IWriteLine("DUMP: " + filename);
 
-            FileStream s = new FileStream(dir + kSeparator + filename, FileMode.Create, FileAccess.Write);
+            FileStream s = new FileStream(Path.Combine(dir, filename), FileMode.Create, FileAccess.Write);
             s.Write(dump, 0, dump.Length);
             s.Close();
         }

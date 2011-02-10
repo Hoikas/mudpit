@@ -7,6 +7,10 @@ namespace MUd {
     public abstract class VaultNodeAccess {
         protected VaultNode fBase;
 
+        public DateTime CreateTime {
+            get { return fBase.CreateTime; }
+        }
+
         public uint CreatorID {
             get { return fBase.fCreatorIdx; }
             set { fBase.fCreatorIdx = value; }

@@ -10,11 +10,13 @@ namespace MUd {
         private static bool fInitialized = false;
         private static Dictionary<string, string> fConfig = new Dictionary<string, string>();
 
-        private static void IReadConfig() {
+        public static void Initialize(string file) { IReadConfig(file); }
+        private static void IReadConfig() { IReadConfig("MUd.conf"); }
+        private static void IReadConfig(string file) {
             StreamReader r = null;
             try {
-                r = new StreamReader("MUd.conf");
-            } catch (FileNotFoundException) {
+                r = new StreamReader(file);
+            } catch {
                 return;
             }
 

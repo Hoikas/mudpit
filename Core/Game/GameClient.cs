@@ -9,7 +9,7 @@ using System.Threading;
 namespace MUd {
     public delegate void GameAgeJoined(uint transID, ENetError result);
     public delegate void GamePong(int ms);
-    public delegate void GameRawBuffer(NetMessage msg, bool handled);
+    public delegate void GameRawBuffer(byte[] msg, bool handled);
 
     public class GameClient : Cli2SrvBase {
 
@@ -95,6 +95,7 @@ namespace MUd {
             return req.fTransID;
         }
 
+        /*
         public void LoadAvatar(Uoid player) {
             Uoid client_mgr = new Uoid();
             client_mgr.fClassType = CreatableID.NetClientMgr;
@@ -130,11 +131,12 @@ namespace MUd {
                 fStream.FlushWriter();
             }
         }
+        */
 
-        public void PropagateBuffer(CreatableID pCre, byte[] buf) {
+        public void PropagateBuffer(ushort pCre, byte[] buf) {
             Game_PropagateBuffer buffer = new Game_PropagateBuffer();
             buffer.fBuffer = buf;
-            buffer.fMsgType = pCre;
+            buffer.fMsgType = (uint)pCre;
 
             ResetIdleTimer();
             lock (fStream) {
@@ -215,7 +217,7 @@ namespace MUd {
 
             try {
                 if (BufferPropagated != null)
-                    BufferPropagated(buffer.NetMsg, handled);
+                    BufferPropagated(buffer.fBuffer, handled);
             } catch (NotSupportedException) {
                 //Unhandled buffer logic needed here...
             }
