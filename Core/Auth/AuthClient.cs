@@ -23,6 +23,7 @@ namespace MUd {
     public delegate void AuthServerAddr(int addr, Guid token);
     public delegate void AuthVaultNodeAdded(uint parentID, uint childID, uint saverID);
     public delegate void AuthVaultNodeChanged(uint nodeID, Guid revUuid);
+    public delegate void AuthVaultNodeCreated(uint transID, ENetError result, uint nodeID);
     public delegate void AuthVaultNodeFetched(uint transID, ENetError result, byte[] data);
     public delegate void AuthVaultNodeFound(uint transID, ENetError result, uint[] nodeIDs);
     public delegate void AuthVaultNodeRemoved(uint parentID, uint childID);
@@ -45,6 +46,7 @@ namespace MUd {
         public event AuthVaultNodeAdded VaultNodeAdded;
         public event AuthResult VaultNodeAddReply;
         public event AuthVaultNodeChanged VaultNodeChanged;
+        public event AuthVaultNodeCreated VaultNodeCreated;
         public event AuthVaultNodeFetched VaultNodeFetched;
         public event AuthVaultNodeFound VaultNodeFound;
         public event AuthVaultNodeRemoved VaultNodeRemoved;
@@ -119,6 +121,22 @@ namespace MUd {
             lock (fStream) {
                 fStream.BufferWriter();
                 fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeAdd);
+                req.Write(fStream);
+                fStream.FlushWriter();
+            }
+
+            return req.fTransID;
+        }
+
+        public uint CreateVaultNode(byte[] data) {
+            Auth_VaultNodeCreate req = new Auth_VaultNodeCreate();
+            req.fTransID = IGetTransID();
+            req.fNodeData = data;
+
+            ResetIdleTimer();
+            lock (fStream) {
+                fStream.BufferWriter();
+                fStream.WriteUShort((ushort)AuthCli2Srv.VaultNodeCreate);
                 req.Write(fStream);
                 fStream.FlushWriter();
             }
@@ -407,6 +425,9 @@ namespace MUd {
                         case AuthSrv2Cli.VaultNodeChanged:
                             IVaultNodeChanged();
                             break;
+                        case AuthSrv2Cli.VaultNodeCreated:
+                            IVaultNodeCreated();
+                            break;
                         case AuthSrv2Cli.VaultNodeFetched:
                             IVaultNodeFetched();
                             break;
@@ -566,6 +587,13 @@ namespace MUd {
             notify.Read(fStream);
             if (VaultNodeChanged != null)
                 VaultNodeChanged(notify.fNodeID, notify.fRevisionUuid);
+        }
+
+        private void IVaultNodeCreated() {
+            Auth_VaultNodeCreated reply = new Auth_VaultNodeCreated();
+            reply.Read(fStream);
+            if (VaultNodeCreated != null)
+                VaultNodeCreated(reply.fTransID, reply.fResult, reply.fNodeID);
         }
 
         private void IVaultNodeFetched() {

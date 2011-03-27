@@ -95,44 +95,6 @@ namespace MUd {
             return req.fTransID;
         }
 
-        /*
-        public void LoadAvatar(Uoid player) {
-            Uoid client_mgr = new Uoid();
-            client_mgr.fClassType = CreatableID.NetClientMgr;
-            client_mgr.fObjectName = "kNetClientMgr_KEY";
-
-            Uoid av_mgr = new Uoid();
-            av_mgr.fClassType = CreatableID.AvatarMgr;
-            av_mgr.fObjectName = "kAvatarMgr_KEY";
-
-            LoadAvatarMsg load_av = new LoadAvatarMsg();
-            load_av.fBCastFlags |= Message.BCastFlags.kLocalPropagate | Message.BCastFlags.kNetPropagate;
-            load_av.fCloneKey = player;
-            load_av.fIsLoading = true;
-            load_av.fIsPlayer = true;
-            load_av.fOriginatingPlayerID = player.fClonePlayerID;
-            load_av.fReceivers.Add(client_mgr);
-            load_av.fRequestorKey = av_mgr;
-
-            NetMsgLoadClone load_clone = new NetMsgLoadClone();
-            load_clone.GameMsg = load_av;
-            load_clone.PlayerID = player.fClonePlayerID;
-            load_clone.fPlayerKey = player;
-            load_clone.TimeSent = new UnifiedTime(DateTime.UtcNow);
-
-            Game_PropagateBuffer buffer = new Game_PropagateBuffer();
-            buffer.NetMsg = load_clone;
-
-            ResetIdleTimer();
-            lock (fStream) {
-                fStream.BufferWriter();
-                fStream.WriteUShort((ushort)GameCli2Srv.PropagateBuffer);
-                buffer.Write(fStream);
-                fStream.FlushWriter();
-            }
-        }
-        */
-
         public void PropagateBuffer(ushort pCre, byte[] buf) {
             Game_PropagateBuffer buffer = new Game_PropagateBuffer();
             buffer.fBuffer = buf;

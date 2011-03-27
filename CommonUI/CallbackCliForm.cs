@@ -8,9 +8,6 @@ using System.Text;
 using System.Windows.Forms;
 
 namespace MUd {
-    public delegate void Action<T1, T2, T3, T4, T5>(T1 o1, T2 o2, T3 o3, T4 o4, T5 o5);
-    public delegate void Action<T1, T2, T3, T4, T5, T6>(T1 o1, T2 o2, T3 o3, T4 o4, T5 o5, T6 o6);
-
     public partial class CallbackCliForm : Form {
         struct Callback {
             public Delegate fFunc;
