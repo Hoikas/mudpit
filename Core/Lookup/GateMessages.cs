@@ -39,22 +39,22 @@ namespace MUd {
     }
 
     public struct Gate_FileSrvRequest {
-        public uint fTransID; //???
-        public bool fUsePool; //???
+        public uint fTransID;
+        public bool fIsPatcher; //Who cares?
 
         public void Read(UruStream s) {
             fTransID = s.ReadUInt();
-            fUsePool = s.ReadBool();
+            fIsPatcher = s.ReadBool();
         }
 
         public void Write(UruStream s) {
             s.WriteUInt(fTransID);
-            s.WriteBool(fUsePool);
+            s.WriteBool(fIsPatcher);
         }
     }
 
     public struct Gate_FileSrvReply {
-        public uint fTransID; //???
+        public uint fTransID;
         public string fHost;  //Len 24
 
         public void Read(UruStream s) {

@@ -50,10 +50,10 @@ namespace MUd {
             }
         }
 
-        public uint GetFileHost(bool usePool) {
+        public uint GetFileHost(bool isPatcher) {
             Gate_FileSrvRequest req = new Gate_FileSrvRequest();
             req.fTransID = IGetTransID();
-            req.fUsePool = usePool;
+            req.fIsPatcher = isPatcher;
 
             ResetIdleTimer();
             lock (fStream) {

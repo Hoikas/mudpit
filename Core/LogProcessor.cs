@@ -20,7 +20,7 @@ namespace MUd {
 
         private StreamWriter fWriter;
         private string fLocation;
-        private ELogType fMinLevel = (ELogType)Configuration.GetEnumInteger("log_level", ELogType.kLogInfo, typeof(ELogType));
+        private ELogType fMinLevel;
 
         public ELogType LogLevel {
             get { return fMinLevel; }
@@ -45,6 +45,26 @@ namespace MUd {
             string path = Path.Combine(Path.Combine("log", fFolderMonth), group);
             Directory.CreateDirectory(path);
             fLocation = Path.Combine(path, name);
+
+            //Allow us to set both kLogLeveXXX and xxx as log levels...
+            //This is mostly so configuration files will look nicer :)
+            string loglev = Configuration.GetString("log_level", "kLogWarning");
+            if (Enum.IsDefined(typeof(ELogType), loglev))
+                fMinLevel = (ELogType)Enum.Parse(typeof(ELogType), loglev);
+            else if (loglev.ToLower() == "error")
+                fMinLevel = ELogType.kLogError;
+            else if (loglev.ToLower() == "warn")
+                fMinLevel = ELogType.kLogWarning;
+            else if (loglev.ToLower() == "info")
+                fMinLevel = ELogType.kLogInfo;
+            else if (loglev.ToLower() == "debug")
+                fMinLevel = ELogType.kLogDebug;
+            else if (loglev.ToLower() == "verbose")
+                fMinLevel = ELogType.kLogVerbose;
+            else {
+                fMinLevel = ELogType.kLogWarning;
+                Error(String.Format("MUd.conf has invalid log_level \"{0}\"", loglev));
+            }
         }
 
         private void IInitLog() {

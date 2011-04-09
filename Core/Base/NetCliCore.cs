@@ -9,7 +9,8 @@ namespace MUd {
         kConnTypeCliToAuth = 10, kConnTypeCliToGame,
         kConnTypeCliToFile = 16, kConnTypeCliToGate = 22,
 
-        kConnTypeSrvToVault = 100, kConnTypeSrvToLookup,
+        kConnTypeSrvToVault = 100, 
+        kConnTypeSrvToMaster,
         kConnTypeCliToAdmin,
     }
 
@@ -30,12 +31,18 @@ namespace MUd {
         kNetErrGameTapConnectionFailed, kNetErrGTTooManyAuthOptions,
         kNetErrGTMissingParameter, kNetErrGTServerError, kNetErrAccountBanned,
         kNetErrKickedByCCR, kNumNetErrors,
+
+        //MUd Server Errors
+        kNetErrServerTooBusy, kNetErrDbFail, kNetErrWhatIsThisIDontEven,
+        kNetErrAintGotNone,
     }
 
     public struct ConnectHeader {
         public EConnType fType;
         public ushort fSockHeaderSize;
-        public uint fBuildID, fBuildType, fBranchID;
+        public uint fBuildID;
+        public NetCliBuildType fBuildType;
+        public uint fBranchID;
         public Guid fProductID;
 
         public const int kSize = 31;
@@ -44,7 +51,7 @@ namespace MUd {
             fType = (EConnType)s.ReadByte();
             fSockHeaderSize = s.ReadUShort();
             fBuildID = s.ReadUInt();
-            fBuildType = s.ReadUInt();
+            fBuildType = (NetCliBuildType)s.ReadUInt();
             fBranchID = s.ReadUInt();
             fProductID = new Guid(s.ReadBytes(16));
         }
@@ -53,7 +60,7 @@ namespace MUd {
             s.WriteByte((byte)fType);
             s.WriteUShort(fSockHeaderSize);
             s.WriteUInt(fBuildID);
-            s.WriteUInt(fBuildType);
+            s.WriteUInt((uint)fBuildType);
             s.WriteUInt(fBranchID);
             s.WriteBytes(fProductID.ToByteArray());
         }
@@ -61,6 +68,14 @@ namespace MUd {
 
     public enum NetCliConnectMsg {
         kNetCliConnect, kNetCliEncrypt, kNetCliError,
+    }
+
+    public enum NetCliBuildType {
+        kDev  = 10,
+        kQA   = 20,
+        kTest = 30,
+        kBeta = 40,
+        kLive = 50,
     }
 
     public struct NetAgeInfo {

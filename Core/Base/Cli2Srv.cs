@@ -97,19 +97,20 @@ namespace MUd {
             SetIdleBehavior(IdleBehavior.DoNothing, 30000);
 
             fHeader = new ConnectHeader();
-            fHeader.fBuildType = 50;
+            fHeader.fBuildType = NetCliBuildType.kLive;
             fHeader.fSockHeaderSize = 31;
         }
 
         #region Connect
         public virtual bool Connect() {
-            fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            fSocket.Connect(fHost, fPort);
+            IPAddress ip = IPAddress.Parse(fHost);
+            fSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            fSocket.Connect(ip, fPort);
             SetIdleBehavior(fIdleBeh, fIdleMs);
             return true;
         }
 
-        protected bool NetCliConnect(int g) {
+        protected virtual bool NetCliConnect(int g) {
             UruStream s = new UruStream(new NetworkStream(fSocket, false));
 
             //NetCliConnect
