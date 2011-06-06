@@ -77,17 +77,17 @@ namespace MUd {
                 if (fIdx != 0) f |= Fields.kNodeIdx;
                 if (fCreateAgeName != String.Empty) f |= Fields.kCreateAgeName;
                 if (fCreateAgeUuid != Guid.Empty) f |= Fields.kCreateAgeUuid;
-                if (fCreatorIdx != 0) f |= Fields.kCreatorIdx;
+                if (fCreatorIdx.HasValue) f |= Fields.kCreatorIdx;
                 if (fCreatorUuid != Guid.Empty) f |= Fields.kCreatorUuid;
                 if (fNodeType != ENodeType.kNodeInvalid) f |= Fields.kNodeType;
-                if (fInt32[0] != 0) f |= Fields.kInt32_1;
-                if (fInt32[1] != 0) f |= Fields.kInt32_2;
-                if (fInt32[2] != 0) f |= Fields.kInt32_3;
-                if (fInt32[3] != 0) f |= Fields.kInt32_4;
-                if (fUInt32[0] != 0) f |= Fields.kUInt32_1;
-                if (fUInt32[1] != 0) f |= Fields.kUInt32_2;
-                if (fUInt32[2] != 0) f |= Fields.kUInt32_3;
-                if (fUInt32[3] != 0) f |= Fields.kUInt32_4;
+                if (fInt32[0].HasValue) f |= Fields.kInt32_1;
+                if (fInt32[1].HasValue) f |= Fields.kInt32_2;
+                if (fInt32[2].HasValue) f |= Fields.kInt32_3;
+                if (fInt32[3].HasValue) f |= Fields.kInt32_4;
+                if (fUInt32[0].HasValue) f |= Fields.kUInt32_1;
+                if (fUInt32[1].HasValue) f |= Fields.kUInt32_2;
+                if (fUInt32[2].HasValue) f |= Fields.kUInt32_3;
+                if (fUInt32[3].HasValue) f |= Fields.kUInt32_4;
                 if (fUuid[0] != Guid.Empty) f |= Fields.kUuid_1;
                 if (fUuid[1] != Guid.Empty) f |= Fields.kUuid_2;
                 if (fUuid[2] != Guid.Empty) f |= Fields.kUuid_3;
@@ -152,22 +152,22 @@ namespace MUd {
                             dict.Add("CreateTime", VaultNode.ToUnixTime(fModifyTime).ToString());
                             break;
                         case VaultNode.Fields.kCreatorIdx:
-                            dict.Add("CreatorIdx", fCreatorIdx.ToString());
+                            dict.Add("CreatorIdx", fCreatorIdx.Value.ToString());
                             break;
                         case VaultNode.Fields.kCreatorUuid:
                             dict.Add("CreatorUuid", fCreatorUuid.ToString().ToLower());
                             break;
                         case VaultNode.Fields.kInt32_1:
-                            dict.Add("Int32_1", fInt32[0].ToString());
+                            dict.Add("Int32_1", fInt32[0].Value.ToString());
                             break;
                         case VaultNode.Fields.kInt32_2:
-                            dict.Add("Int32_2", fInt32[1].ToString());
+                            dict.Add("Int32_2", fInt32[1].Value.ToString());
                             break;
                         case VaultNode.Fields.kInt32_3:
-                            dict.Add("Int32_3", fInt32[2].ToString());
+                            dict.Add("Int32_3", fInt32[2].Value.ToString());
                             break;
                         case VaultNode.Fields.kInt32_4:
-                            dict.Add("Int32_4", fInt32[3].ToString());
+                            dict.Add("Int32_4", fInt32[3].Value.ToString());
                             break;
                         case VaultNode.Fields.kIString64_1:
                             dict.Add("IString64_1", fIString64[0]);
@@ -209,16 +209,16 @@ namespace MUd {
                             dict.Add("Text_2", fText[0]);
                             break;
                         case VaultNode.Fields.kUInt32_1:
-                            dict.Add("UInt32_1", fUInt32[0].ToString());
+                            dict.Add("UInt32_1", fUInt32[0].Value.ToString());
                             break;
                         case VaultNode.Fields.kUInt32_2:
-                            dict.Add("UInt32_2", fUInt32[1].ToString());
+                            dict.Add("UInt32_2", fUInt32[1].Value.ToString());
                             break;
                         case VaultNode.Fields.kUInt32_3:
-                            dict.Add("UInt32_3", fUInt32[2].ToString());
+                            dict.Add("UInt32_3", fUInt32[2].Value.ToString());
                             break;
                         case VaultNode.Fields.kUInt32_4:
-                            dict.Add("UInt32_4", fUInt32[3].ToString());
+                            dict.Add("UInt32_4", fUInt32[3].Value.ToString());
                             break;
                         case VaultNode.Fields.kUuid_1:
                             dict.Add("Uuid_1", fUuid[0].ToString().ToLower());
@@ -245,11 +245,11 @@ namespace MUd {
         internal DateTime fModifyTime = DateTime.UtcNow.Subtract(TimeSpan.FromHours(7));
         public string fCreateAgeName = String.Empty;
         public Guid fCreateAgeUuid = Guid.Empty;
-        public uint fCreatorIdx = 0;
+        public Nullable<uint> fCreatorIdx = new Nullable<uint>();
         public Guid fCreatorUuid = Guid.Empty;
         protected ENodeType fNodeType = ENodeType.kNodeInvalid;
-        public int[] fInt32 = new int[] { 0, 0, 0, 0 };
-        public uint[] fUInt32 = new uint[] { 0, 0, 0, 0 };
+        public Nullable<int>[] fInt32 = new Nullable<int>[4];
+        public Nullable<uint>[] fUInt32 = new Nullable<uint>[4];
         public Guid[] fUuid = new Guid[] { Guid.Empty, Guid.Empty, Guid.Empty, Guid.Empty };
         public string[] fString64 = new string[] { String.Empty, String.Empty, String.Empty, String.Empty, String.Empty, String.Empty };
         public string[] fIString64 = new string[] { String.Empty, String.Empty };
@@ -431,22 +431,22 @@ namespace MUd {
                         s.WriteUInt(ToUnixTime(fCreateTime));
                         break;
                     case Fields.kCreatorIdx:
-                        s.WriteUInt(fCreatorIdx);
+                        s.WriteUInt(fCreatorIdx.Value);
                         break;
                     case Fields.kCreatorUuid:
                         s.WriteBytes(fCreatorUuid.ToByteArray());
                         break;
                     case Fields.kInt32_1:
-                        s.WriteInt(fInt32[0]);
+                        s.WriteInt(fInt32[0].Value);
                         break;
                     case Fields.kInt32_2:
-                        s.WriteInt(fInt32[1]);
+                        s.WriteInt(fInt32[1].Value);
                         break;
                     case Fields.kInt32_3:
-                        s.WriteInt(fInt32[2]);
+                        s.WriteInt(fInt32[2].Value);
                         break;
                     case Fields.kInt32_4:
-                        s.WriteInt(fInt32[3]);
+                        s.WriteInt(fInt32[3].Value);
                         break;
                     case Fields.kIString64_1:
                         s.WriteUnicodeStringV32(fIString64[0]);
@@ -488,16 +488,16 @@ namespace MUd {
                         s.WriteUnicodeStringV32(fText[1]);
                         break;
                     case Fields.kUInt32_1:
-                        s.WriteUInt(fUInt32[0]);
+                        s.WriteUInt(fUInt32[0].Value);
                         break;
                     case Fields.kUInt32_2:
-                        s.WriteUInt(fUInt32[1]);
+                        s.WriteUInt(fUInt32[1].Value);
                         break;
                     case Fields.kUInt32_3:
-                        s.WriteUInt(fUInt32[2]);
+                        s.WriteUInt(fUInt32[2].Value);
                         break;
                     case Fields.kUInt32_4:
-                        s.WriteUInt(fUInt32[3]);
+                        s.WriteUInt(fUInt32[3].Value);
                         break;
                     case Fields.kUuid_1:
                         s.WriteBytes(fUuid[0].ToByteArray());

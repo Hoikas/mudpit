@@ -12,7 +12,7 @@ namespace MUd {
         }
 
         public uint CreatorID {
-            get { return fBase.fCreatorIdx; }
+            get { return fBase.fCreatorIdx.Value; }
             set { fBase.fCreatorIdx = value; }
         }
 
@@ -59,7 +59,7 @@ namespace MUd {
     public sealed class VaultAgeInfoNode : VaultNodeAccess {
 
         public int SequenceNumber {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
@@ -69,22 +69,22 @@ namespace MUd {
         }
 
         public int Language {
-            get { return fBase.fInt32[2]; }
+            get { return fBase.fInt32[2].Value; }
             set { fBase.fInt32[2] = value; }
         }
 
         public uint AgeNodeID {
-            get { return fBase.fUInt32[0]; }
+            get { return fBase.fUInt32[0].Value; }
             set { fBase.fUInt32[0] = value; }
         }
 
         public uint TsarID {
-            get { return fBase.fUInt32[1]; }
+            get { return fBase.fUInt32[1].Value; }
             set { fBase.fUInt32[1] = value; }
         }
 
         public uint Flags {
-            get { return fBase.fUInt32[2]; }
+            get { return fBase.fUInt32[2].Value; }
             set { fBase.fUInt32[2] = value; }
         }
 
@@ -146,7 +146,7 @@ namespace MUd {
     public sealed class VaultChronicleNode : VaultNodeAccess {
 
         public int EntryType {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
@@ -216,12 +216,12 @@ namespace MUd {
     public sealed class VaultMarkerListNode : VaultNodeAccess {
 
         public int GameType {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
         public int RoundLength {
-            get { return fBase.fInt32[1]; }
+            get { return fBase.fInt32[1].Value; }
             set { fBase.fInt32[1] = value; }
         }
 
@@ -242,32 +242,32 @@ namespace MUd {
         }
 
         public int Torans {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
         public int HSpans {
-            get { return fBase.fInt32[1]; }
+            get { return fBase.fInt32[1].Value; }
             set { fBase.fInt32[1] = value; }
         }
 
         public int VSpans {
-            get { return fBase.fInt32[2]; }
+            get { return fBase.fInt32[2].Value; }
             set { fBase.fInt32[2] = value; }
         }
 
         public uint PosX {
-            get { return fBase.fUInt32[0]; }
+            get { return fBase.fUInt32[0].Value; }
             set { fBase.fUInt32[0] = value; }
         }
 
         public uint PosY {
-            get { return fBase.fUInt32[1]; }
+            get { return fBase.fUInt32[1].Value; }
             set { fBase.fUInt32[1] = value; }
         }
 
         public uint PosZ {
-            get { return fBase.fUInt32[2]; }
+            get { return fBase.fUInt32[2].Value; }
             set { fBase.fUInt32[2] = value; }
         }
 
@@ -288,7 +288,7 @@ namespace MUd {
         }
 
         public uint PlayerID {
-            get { return fBase.fUInt32[0]; }
+            get { return fBase.fUInt32[0].Value; }
             set { fBase.fUInt32[0] = value; }
         }
 
@@ -350,7 +350,7 @@ namespace MUd {
     public sealed class VaultSDLNode : VaultNodeAccess {
 
         public int StateIdent {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
@@ -372,7 +372,7 @@ namespace MUd {
     public sealed class VaultSystemNode : VaultNodeAccess {
 
         public int CCRStatus {
-            get { return fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].Value; }
             set { fBase.fInt32[0] = value; }
         }
 
