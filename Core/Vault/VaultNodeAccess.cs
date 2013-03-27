@@ -167,7 +167,7 @@ namespace MUd {
     public class VaultFolderNode : VaultNodeAccess {
 
         public EStandardNode FolderType {
-            get { return (EStandardNode)fBase.fInt32[0]; }
+            get { return fBase.fInt32[0].HasValue ? (EStandardNode)fBase.fInt32[0] : EStandardNode.kInvalid; }
             set { fBase.fInt32[0] = (int)value; }
         }
 

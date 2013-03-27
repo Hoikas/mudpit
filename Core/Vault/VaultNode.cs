@@ -17,7 +17,7 @@ namespace MUd {
     }
 
     public enum EStandardNode {
-            kUserDefinedNode, kInboxFolder, kBuddyListFolder, kIgnoreListFolder,
+            kInvalid = -1, kUserDefinedNode, kInboxFolder, kBuddyListFolder, kIgnoreListFolder,
             kPeopleIKnowAboutFolder, kVaultMgrGlobalDataFolder, kChronicleFolder,
             kAvatarOutfitFolder, kAgeTypeJournalFolder, kSubAgesFolder,
             kDeviceInboxFolder, kHoodMembersFolder, kAllPlayersFolder,

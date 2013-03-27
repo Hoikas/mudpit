@@ -24,6 +24,7 @@ namespace MUd {
 
         private bool fInitialized = false;
         private uint fBaseNode;
+        private List<ListViewItem> fHiddenFolders = new List<ListViewItem>();
 
         public KiMailControl() {
             InitializeComponent();
@@ -36,16 +37,15 @@ namespace MUd {
 
         private void IAddJournalFolder(VaultNode node) {
             VaultFolderNode age = new VaultFolderNode(node);
-            if (fParent.GetChildCount(node.ID) == 0) {
-                fParent.LogDebug(String.Format("Ignoring empty journal... [AGE: {0}] [NodeID: {1}]", age.FolderName, age.ID));
-                return;
-            }
 
             fParent.LogDebug(String.Format("Got journal [AGE: {0}] [NodeID: {1}]", age.FolderName, age.ID));
 
             ListViewItem lvi = new ListViewItem(age.FolderName);
             lvi.Tag = node;
-            fAgeList.Items.Add(lvi);
+            if (fParent.GetChildCount(node.ID) == 0 && !fShowEmptyFolders.Checked)
+                fHiddenFolders.Add(lvi);
+            else
+                fAgeList.Items.Add(lvi);
         }
 
         private void IAddKiItem(VaultNode node) {
@@ -144,7 +144,7 @@ namespace MUd {
 
             //Cancel the edit...
             //Why? Let the rename be done by the server
-            //Slight delay, but it insures correctness (Cyan's Server is Weird...)
+            //Slight delay, but it ensures correctness (Cyan's Server is Weird...)
             e.CancelEdit = true;
 
             //Send the updated node
@@ -173,7 +173,7 @@ namespace MUd {
             fInitialized = true;
             fBaseNode = journals;
             fParent.FetchChildren(journals, new Action<VaultNode>(IAddJournalFolder));
-            
+
             //Create a "fake" folder for the inbox
             VaultFolderNode folder = new VaultFolderNode();
             folder.FolderName = "Inbox";
@@ -182,6 +182,24 @@ namespace MUd {
 
             //Pass it off
             IAddJournalFolder(folder.BaseNode);
+        }
+
+        private void IShowHiddenToggled(object sender, EventArgs e) {
+            fAgeList.BeginUpdate();
+            if (fShowEmptyFolders.Checked) {
+                foreach (ListViewItem lvi in fHiddenFolders)
+                    fAgeList.Items.Add(lvi);
+                fHiddenFolders.Clear();
+            } else {
+                foreach (ListViewItem lvi in fAgeList.Items) {
+                    VaultNode node = (VaultNode)lvi.Tag;
+                    if (fParent.GetChildCount(node.ID) == 0) {
+                        fHiddenFolders.Add(lvi);
+                        lvi.Remove();
+                    }
+                }
+            }
+            fAgeList.EndUpdate();
         }
 
         private void ISetTitle(VaultNode node, string text) {
