@@ -522,9 +522,11 @@ namespace MUd {
                 fNeighborsCtrl.RemoveNode(node);
             if (fBaseNodes[EStandardNode.kPeopleIKnowAboutFolder] == parentID)
                 fRecentsCtrl.RemoveNode(node);
+            if (fBaseNodes[EStandardNode.kAgeJournalsFolder] == parentID)
+                fKiMailCtrl.RemoveFolder(node);
 
             if (node.NodeType == ENodeType.kNodeImage || node.NodeType == ENodeType.kNodeTextNote)
-                fKiMailCtrl.RemoveNode(node);
+                fKiMailCtrl.RemoveKiItem(node);
         }
 
         private void IShowError(string text) {

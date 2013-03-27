@@ -25,44 +25,47 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.fJournalItemMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.fDeleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fRenameMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fDeleteKiItemMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fRenameKiItemMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fGridPanel = new System.Windows.Forms.Panel();
             this.fGridSplitter = new System.Windows.Forms.Splitter();
             this.fMailList = new System.Windows.Forms.ListView();
             this.fKiMailColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.fAgeList = new System.Windows.Forms.ListView();
             this.fAgesColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.fFolderItemMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.fDeleteFolderMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fShowEmptyFolders = new System.Windows.Forms.CheckBox();
             this.fJournalItemMenu.SuspendLayout();
             this.fGridPanel.SuspendLayout();
+            this.fFolderItemMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // fJournalItemMenu
             // 
             this.fJournalItemMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fDeleteMenuItem,
-            this.fRenameMenuItem});
+            this.fDeleteKiItemMenuItem,
+            this.fRenameKiItemMenuItem});
             this.fJournalItemMenu.Name = "fJournalItemMenu";
             this.fJournalItemMenu.Size = new System.Drawing.Size(111, 48);
             // 
-            // fDeleteMenuItem
+            // fDeleteKiItemMenuItem
             // 
-            this.fDeleteMenuItem.Name = "fDeleteMenuItem";
-            this.fDeleteMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.fDeleteMenuItem.ShowShortcutKeys = false;
-            this.fDeleteMenuItem.Size = new System.Drawing.Size(110, 22);
-            this.fDeleteMenuItem.Text = "&Delete";
-            this.fDeleteMenuItem.Click += new System.EventHandler(this.IDeleteKiItem);
+            this.fDeleteKiItemMenuItem.Name = "fDeleteKiItemMenuItem";
+            this.fDeleteKiItemMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
+            this.fDeleteKiItemMenuItem.ShowShortcutKeys = false;
+            this.fDeleteKiItemMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fDeleteKiItemMenuItem.Text = "&Delete";
+            this.fDeleteKiItemMenuItem.Click += new System.EventHandler(this.IDeleteKiItem);
             // 
-            // fRenameMenuItem
+            // fRenameKiItemMenuItem
             // 
-            this.fRenameMenuItem.Name = "fRenameMenuItem";
-            this.fRenameMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N)));
-            this.fRenameMenuItem.ShowShortcutKeys = false;
-            this.fRenameMenuItem.Size = new System.Drawing.Size(110, 22);
-            this.fRenameMenuItem.Text = "Re&name";
-            this.fRenameMenuItem.Click += new System.EventHandler(this.IRenameKiItem);
+            this.fRenameKiItemMenuItem.Name = "fRenameKiItemMenuItem";
+            this.fRenameKiItemMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N)));
+            this.fRenameKiItemMenuItem.ShowShortcutKeys = false;
+            this.fRenameKiItemMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fRenameKiItemMenuItem.Text = "Re&name";
+            this.fRenameKiItemMenuItem.Click += new System.EventHandler(this.IRenameKiItem);
             // 
             // fGridPanel
             // 
@@ -79,7 +82,7 @@
             // 
             // fGridSplitter
             // 
-            this.fGridSplitter.Location = new System.Drawing.Point(123, 0);
+            this.fGridSplitter.Location = new System.Drawing.Point(145, 0);
             this.fGridSplitter.Name = "fGridSplitter";
             this.fGridSplitter.Size = new System.Drawing.Size(3, 400);
             this.fGridSplitter.TabIndex = 4;
@@ -93,32 +96,33 @@
             this.fMailList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.fMailList.FullRowSelect = true;
             this.fMailList.GridLines = true;
-            this.fMailList.ItemActivate += new System.EventHandler(IKiItemActivated);
             this.fMailList.LabelEdit = true;
-            this.fMailList.Location = new System.Drawing.Point(123, 0);
+            this.fMailList.Location = new System.Drawing.Point(145, 0);
             this.fMailList.Name = "fMailList";
-            this.fMailList.Size = new System.Drawing.Size(314, 400);
+            this.fMailList.Size = new System.Drawing.Size(292, 400);
             this.fMailList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fMailList.TabIndex = 3;
             this.fMailList.UseCompatibleStateImageBehavior = false;
             this.fMailList.View = System.Windows.Forms.View.Details;
+            this.fMailList.ItemActivate += new System.EventHandler(this.IKiItemActivated);
             // 
             // fKiMailColumn
             // 
             this.fKiMailColumn.Text = "Journal Contents";
-            this.fKiMailColumn.Width = 296;
+            this.fKiMailColumn.Width = 287;
             // 
             // fAgeList
             // 
             this.fAgeList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.fAgesColumn});
+            this.fAgeList.ContextMenuStrip = this.fFolderItemMenu;
             this.fAgeList.Dock = System.Windows.Forms.DockStyle.Left;
             this.fAgeList.FullRowSelect = true;
             this.fAgeList.GridLines = true;
             this.fAgeList.HideSelection = false;
             this.fAgeList.Location = new System.Drawing.Point(0, 0);
             this.fAgeList.Name = "fAgeList";
-            this.fAgeList.Size = new System.Drawing.Size(123, 400);
+            this.fAgeList.Size = new System.Drawing.Size(145, 400);
             this.fAgeList.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.fAgeList.TabIndex = 2;
             this.fAgeList.UseCompatibleStateImageBehavior = false;
@@ -128,7 +132,21 @@
             // fAgesColumn
             // 
             this.fAgesColumn.Text = "Journal Folders";
-            this.fAgesColumn.Width = 116;
+            this.fAgesColumn.Width = 138;
+            // 
+            // fFolderItemMenu
+            // 
+            this.fFolderItemMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fDeleteFolderMenuItem});
+            this.fFolderItemMenu.Name = "fFolderItemMenu";
+            this.fFolderItemMenu.Size = new System.Drawing.Size(108, 26);
+            // 
+            // fDeleteFolderMenuItem
+            // 
+            this.fDeleteFolderMenuItem.Name = "fDeleteFolderMenuItem";
+            this.fDeleteFolderMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.fDeleteFolderMenuItem.Text = "&Delete";
+            this.fDeleteFolderMenuItem.Click += new System.EventHandler(this.IDeleteFolder);
             // 
             // fShowEmptyFolders
             // 
@@ -152,6 +170,7 @@
             this.Size = new System.Drawing.Size(440, 431);
             this.fJournalItemMenu.ResumeLayout(false);
             this.fGridPanel.ResumeLayout(false);
+            this.fFolderItemMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -160,8 +179,8 @@
         #endregion
 
         private System.Windows.Forms.ContextMenuStrip fJournalItemMenu;
-        private System.Windows.Forms.ToolStripMenuItem fDeleteMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem fRenameMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fDeleteKiItemMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fRenameKiItemMenuItem;
         private System.Windows.Forms.Panel fGridPanel;
         private System.Windows.Forms.Splitter fGridSplitter;
         private System.Windows.Forms.ListView fMailList;
@@ -169,5 +188,7 @@
         private System.Windows.Forms.ListView fAgeList;
         private System.Windows.Forms.ColumnHeader fAgesColumn;
         private System.Windows.Forms.CheckBox fShowEmptyFolders;
+        private System.Windows.Forms.ContextMenuStrip fFolderItemMenu;
+        private System.Windows.Forms.ToolStripMenuItem fDeleteFolderMenuItem;
     }
 }

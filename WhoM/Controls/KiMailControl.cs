@@ -37,15 +37,14 @@ namespace MUd {
 
         private void IAddJournalFolder(VaultNode node) {
             VaultFolderNode age = new VaultFolderNode(node);
-
             fParent.LogDebug(String.Format("Got journal [AGE: {0}] [NodeID: {1}]", age.FolderName, age.ID));
 
-            ListViewItem lvi = new ListViewItem(age.FolderName);
-            lvi.Tag = node;
+            ListViewItem folder = new ListViewItem(age.FolderName);
+            folder.Tag = node;
             if (fParent.GetChildCount(node.ID) == 0 && !fShowEmptyFolders.Checked)
-                fHiddenFolders.Add(lvi);
+                fHiddenFolders.Add(folder);
             else
-                fAgeList.Items.Add(lvi);
+                fAgeList.Items.Add(folder);
         }
 
         private void IAddKiItem(VaultNode node) {
@@ -90,6 +89,22 @@ namespace MUd {
             fAgeList.Items.Clear();
             fMailList.Items.Clear();
             fInitialized = false;
+        }
+
+        private void IDeleteFolder(object sender, EventArgs e) {
+            if (fAgeList.FocusedItem == null) return;
+            VaultFolderNode folder = new VaultFolderNode((VaultNode)fAgeList.FocusedItem.Tag);
+
+            // If this folder has children, we should prompt the user about the deletion...
+            if (fParent.GetChildCount(folder.ID) > 0) {
+                DialogResult dr = MessageBox.Show(String.Format("Are you sure you want to delete \"{0}\"?\r\nAny items left in this folder will be orphaned.",
+                    folder.FolderName), "Delete Age Folder", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (dr == DialogResult.No)
+                    return;
+            }
+
+            // Callback from Auth will remove it from the list
+            fParent.AuthCli.RemoveVaultNode(fBaseNode, folder.ID);
         }
 
         private void IDeleteKiItem(object sender, EventArgs e) {
@@ -151,11 +166,21 @@ namespace MUd {
             fParent.AuthCli.SaveVaultNode(Guid.NewGuid(), node.ID, node.ToArray());
         }
 
-        public void RemoveNode(VaultNode node) {
-            for (int i = 0; i < fMailList.Items.Count; i++) {
-                VaultNode tag = (VaultNode)fMailList.Items[i].Tag;
+        public void RemoveFolder(VaultNode node) {
+            foreach (ListViewItem lvi in fAgeList.Items) {
+                VaultNode tag = (VaultNode)lvi.Tag;
                 if (tag.ID == node.ID) {
-                    fMailList.Items.RemoveAt(i);
+                    lvi.Remove();
+                    break;
+                }
+            }
+        }
+
+        public void RemoveKiItem(VaultNode node) {
+            foreach (ListViewItem lvi in fMailList.Items) {
+                VaultNode tag = (VaultNode)lvi.Tag;
+                if (tag.ID == node.ID) {
+                    lvi.Remove();
                     break;
                 }
             }
