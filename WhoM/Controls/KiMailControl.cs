@@ -85,10 +85,34 @@ namespace MUd {
                 IAddKiItem(node);
         }
 
+        private void IAddUserNode(ENetError result, uint nodeID, uint parentID) {
+            if (result != ENetError.kNetSuccess) {
+                fParent.LogError("Failed to create a user node, so not adding it.");
+                MessageBox.Show("Failed to create KI Mail\r\n" + result.ToString().Substring(4), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // Ref the node. We'll add it to the list in a callback
+            fParent.AuthCli.AddVaultNode(parentID, nodeID, fParent.fActivePlayer);
+        }
+
         public void Clear() {
             fAgeList.Items.Clear();
             fMailList.Items.Clear();
             fInitialized = false;
+        }
+
+        private void ICreateTextNote(object sender, EventArgs e) {
+            if (fAgeList.FocusedItem == null) return;
+
+            VaultTextNode text = new VaultTextNode();
+            text.NoteName = "WhoM Text Note";
+            text.NodeType = ENoteType.kNoteGeneric;
+            text.Text = "Hello, World!";
+
+            // Save the node, then add it to the age journals on a callback
+            uint transID = fParent.AuthCli.CreateVaultNode(text.BaseNode.ToArray());
+            fParent.RegisterAuthCB(transID, new Action<ENetError, uint, uint>(IAddUserNode), new object[] { ((VaultNode)fAgeList.FocusedItem.Tag).ID });
         }
 
         private void IDeleteFolder(object sender, EventArgs e) {
@@ -129,12 +153,24 @@ namespace MUd {
             return String.Empty;
         }
 
+        private void IItemSelected(object sender, ListViewItemSelectionChangedEventArgs e) {
+            fDeleteKiItemMenuItem.Visible = e.IsSelected;
+            fRenameKiItemMenuItem.Visible = e.IsSelected;
+        }
+
         private void IJournalSelected(object sender, ListViewItemSelectionChangedEventArgs e) {
-            if (!e.IsSelected) return;
+            if (!e.IsSelected) {
+                fDeleteFolderMenuItem.Visible = false;
+                return;
+            }
             fMailList.Items.Clear();
 
-            VaultNode folder = (VaultNode)e.Item.Tag;
-            fParent.FetchChildren(folder.ID, new Action<VaultNode>(IAddKiItem));
+            VaultNode node = (VaultNode)e.Item.Tag;
+            fParent.FetchChildren(node.ID, new Action<VaultNode>(IAddKiItem));
+
+            // No context menus for the KI Inbox magic folder
+            VaultFolderNode folder = new VaultFolderNode(node);
+            fDeleteFolderMenuItem.Visible = (folder.FolderType != EStandardNode.kInboxFolder);
         }
 
         private void IKiItemActivated(object sender, EventArgs e) {

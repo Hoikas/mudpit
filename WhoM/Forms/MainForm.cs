@@ -138,8 +138,8 @@ namespace MUd {
             if (fVaultTree.ContainsKey(parentID))
                 fVaultTree[parentID].Add(childID);
 
-            //No TransID, so don't use IFireTransCallbacks
-            if (fBaseNodes.ContainsValue(parentID))
+            // No TransID, so don't use IFireTransCallbacks
+            //if (fBaseNodes.ContainsValue(parentID))
                 FetchNode(childID, new Action<VaultNode, uint, uint>(IAddToPanes), new object[] { parentID, childID });
         }
 

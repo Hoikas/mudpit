@@ -25,6 +25,7 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.fJournalItemMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.createTextNoteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fDeleteKiItemMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fRenameKiItemMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fGridPanel = new System.Windows.Forms.Panel();
@@ -44,18 +45,27 @@
             // fJournalItemMenu
             // 
             this.fJournalItemMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.createTextNoteToolStripMenuItem,
             this.fDeleteKiItemMenuItem,
             this.fRenameKiItemMenuItem});
             this.fJournalItemMenu.Name = "fJournalItemMenu";
-            this.fJournalItemMenu.Size = new System.Drawing.Size(111, 48);
+            this.fJournalItemMenu.Size = new System.Drawing.Size(163, 92);
+            // 
+            // createTextNoteToolStripMenuItem
+            // 
+            this.createTextNoteToolStripMenuItem.Name = "createTextNoteToolStripMenuItem";
+            this.createTextNoteToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.createTextNoteToolStripMenuItem.Text = "&Create Text Note";
+            this.createTextNoteToolStripMenuItem.Click += new System.EventHandler(this.ICreateTextNote);
             // 
             // fDeleteKiItemMenuItem
             // 
             this.fDeleteKiItemMenuItem.Name = "fDeleteKiItemMenuItem";
             this.fDeleteKiItemMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
             this.fDeleteKiItemMenuItem.ShowShortcutKeys = false;
-            this.fDeleteKiItemMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fDeleteKiItemMenuItem.Size = new System.Drawing.Size(162, 22);
             this.fDeleteKiItemMenuItem.Text = "&Delete";
+            this.fDeleteKiItemMenuItem.Visible = false;
             this.fDeleteKiItemMenuItem.Click += new System.EventHandler(this.IDeleteKiItem);
             // 
             // fRenameKiItemMenuItem
@@ -63,8 +73,9 @@
             this.fRenameKiItemMenuItem.Name = "fRenameKiItemMenuItem";
             this.fRenameKiItemMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.N)));
             this.fRenameKiItemMenuItem.ShowShortcutKeys = false;
-            this.fRenameKiItemMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fRenameKiItemMenuItem.Size = new System.Drawing.Size(162, 22);
             this.fRenameKiItemMenuItem.Text = "Re&name";
+            this.fRenameKiItemMenuItem.Visible = false;
             this.fRenameKiItemMenuItem.Click += new System.EventHandler(this.IRenameKiItem);
             // 
             // fGridPanel
@@ -105,6 +116,7 @@
             this.fMailList.UseCompatibleStateImageBehavior = false;
             this.fMailList.View = System.Windows.Forms.View.Details;
             this.fMailList.ItemActivate += new System.EventHandler(this.IKiItemActivated);
+            this.fMailList.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.IItemSelected);
             // 
             // fKiMailColumn
             // 
@@ -146,6 +158,7 @@
             this.fDeleteFolderMenuItem.Name = "fDeleteFolderMenuItem";
             this.fDeleteFolderMenuItem.Size = new System.Drawing.Size(107, 22);
             this.fDeleteFolderMenuItem.Text = "&Delete";
+            this.fDeleteFolderMenuItem.Visible = false;
             this.fDeleteFolderMenuItem.Click += new System.EventHandler(this.IDeleteFolder);
             // 
             // fShowEmptyFolders
@@ -190,5 +203,6 @@
         private System.Windows.Forms.CheckBox fShowEmptyFolders;
         private System.Windows.Forms.ContextMenuStrip fFolderItemMenu;
         private System.Windows.Forms.ToolStripMenuItem fDeleteFolderMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem createTextNoteToolStripMenuItem;
     }
 }

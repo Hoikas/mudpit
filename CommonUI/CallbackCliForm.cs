@@ -68,6 +68,7 @@ namespace MUd {
             fAuthCli.PlayerSet += new AuthResult(OnAuthPlayerSet);
             fAuthCli.VaultNodeAdded += new AuthVaultNodeAdded(OnAuthVaultNodeAdded);
             fAuthCli.VaultNodeChanged += new AuthVaultNodeChanged(OnAuthVaultNodeChanged);
+            fAuthCli.VaultNodeCreated += new AuthVaultNodeCreated(OnAuthVaultNodeCreated);
             fAuthCli.VaultNodeFetched += new AuthVaultNodeFetched(OnAuthVaultNodeFetched);
             fAuthCli.VaultNodeFound += new AuthVaultNodeFound(OnAuthVaultNodeFound);
             fAuthCli.VaultNodeRemoved += new AuthVaultNodeRemoved(OnAuthVaultNodeRemoved);
@@ -117,6 +118,12 @@ namespace MUd {
 
         protected virtual void OnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID) { }
         protected virtual void OnAuthVaultNodeChanged(uint nodeID, Guid revUuid) { }
+
+        protected virtual void OnAuthVaultNodeCreated(uint transID, ENetError result, uint nodeID) {
+            //Fire callback
+            // - Method: ISomething(ENetError result, uint nodeID, ...);
+            IFireAuthCallback(transID, new object[] { result, nodeID });
+        }
 
         protected virtual void OnAuthVaultNodeFetched(uint transID, ENetError result, byte[] data) {
             //Fire callback
