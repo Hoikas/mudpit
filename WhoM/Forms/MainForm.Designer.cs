@@ -190,15 +190,16 @@
             // 
             // fTabControl
             // 
-            this.fTabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.fTabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.fTabControl.Controls.Add(this.fBuddiesTab);
             this.fTabControl.Controls.Add(this.fKiMailTab);
             this.fTabControl.Controls.Add(this.fNeighborsTab);
             this.fTabControl.Controls.Add(this.fPublicAgesTab);
             this.fTabControl.Controls.Add(this.fRecentsTab);
             this.fTabControl.Location = new System.Drawing.Point(0, 55);
+            this.fTabControl.Margin = new System.Windows.Forms.Padding(0);
             this.fTabControl.Name = "fTabControl";
             this.fTabControl.SelectedIndex = 0;
             this.fTabControl.Size = new System.Drawing.Size(454, 494);
@@ -208,16 +209,16 @@
             // 
             // fBuddiesTab
             // 
+            this.fBuddiesTab.BackColor = System.Drawing.SystemColors.Control;
             this.fBuddiesTab.Controls.Add(this.fAddBuddy);
             this.fBuddiesTab.Controls.Add(this.fBuddyCtrl);
             this.fBuddiesTab.Location = new System.Drawing.Point(4, 22);
             this.fBuddiesTab.Name = "fBuddiesTab";
-            this.fBuddiesTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fBuddiesTab.Padding = new System.Windows.Forms.Padding(0);
             this.fBuddiesTab.Size = new System.Drawing.Size(446, 468);
             this.fBuddiesTab.TabIndex = 0;
             this.fBuddiesTab.Tag = "buddies";
             this.fBuddiesTab.Text = "Buddies List";
-            this.fBuddiesTab.UseVisualStyleBackColor = true;
             // 
             // fAddBuddy
             // 
@@ -231,30 +232,30 @@
             // 
             // fBuddyCtrl
             // 
-            this.fBuddyCtrl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.fBuddyCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fBuddyCtrl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.fBuddyCtrl.Location = new System.Drawing.Point(0, 0);
             this.fBuddyCtrl.Name = "fBuddyCtrl";
-            this.fBuddyCtrl.Size = new System.Drawing.Size(440, 431);
+            this.fBuddyCtrl.Size = new System.Drawing.Size(446, 431);
             this.fBuddyCtrl.TabIndex = 0;
             // 
             // fKiMailTab
             // 
+            this.fKiMailTab.BackColor = System.Drawing.SystemColors.Control;
             this.fKiMailTab.Controls.Add(this.fKiMailCtrl);
             this.fKiMailTab.Location = new System.Drawing.Point(4, 22);
             this.fKiMailTab.Name = "fKiMailTab";
-            this.fKiMailTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fKiMailTab.Padding = new System.Windows.Forms.Padding(0);
             this.fKiMailTab.Size = new System.Drawing.Size(446, 468);
             this.fKiMailTab.TabIndex = 4;
             this.fKiMailTab.Tag = "kimail";
             this.fKiMailTab.Text = "KI Mail";
-            this.fKiMailTab.UseVisualStyleBackColor = true;
             // 
             // fKiMailCtrl
             // 
             this.fKiMailCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fKiMailCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fKiMailCtrl.Location = new System.Drawing.Point(0, 0);
             this.fKiMailCtrl.Name = "fKiMailCtrl";
             this.fKiMailCtrl.Size = new System.Drawing.Size(440, 462);
             this.fKiMailCtrl.TabIndex = 0;
@@ -264,7 +265,7 @@
             this.fNeighborsTab.Controls.Add(this.fNeighborsCtrl);
             this.fNeighborsTab.Location = new System.Drawing.Point(4, 22);
             this.fNeighborsTab.Name = "fNeighborsTab";
-            this.fNeighborsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fNeighborsTab.Padding = new System.Windows.Forms.Padding(0);
             this.fNeighborsTab.Size = new System.Drawing.Size(446, 468);
             this.fNeighborsTab.TabIndex = 1;
             this.fNeighborsTab.Tag = "neighbors";
@@ -273,30 +274,31 @@
             // 
             // fNeighborsCtrl
             // 
+            this.fNeighborsCtrl.BackColor = System.Drawing.SystemColors.Control;
             this.fNeighborsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fNeighborsCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fNeighborsCtrl.Location = new System.Drawing.Point(0, 0);
             this.fNeighborsCtrl.Name = "fNeighborsCtrl";
             this.fNeighborsCtrl.Size = new System.Drawing.Size(440, 462);
             this.fNeighborsCtrl.TabIndex = 0;
             // 
             // fPublicAgesTab
             // 
+            this.fPublicAgesTab.BackColor = System.Drawing.SystemColors.Control;
             this.fPublicAgesTab.Controls.Add(this.fPublicAgesCtrl);
             this.fPublicAgesTab.Location = new System.Drawing.Point(4, 22);
             this.fPublicAgesTab.Name = "fPublicAgesTab";
-            this.fPublicAgesTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fPublicAgesTab.Padding = new System.Windows.Forms.Padding(0);
             this.fPublicAgesTab.Size = new System.Drawing.Size(446, 468);
             this.fPublicAgesTab.TabIndex = 3;
             this.fPublicAgesTab.Tag = "publicages";
             this.fPublicAgesTab.Text = "Public Ages";
-            this.fPublicAgesTab.UseVisualStyleBackColor = true;
             // 
             // fPublicAgesCtrl
             // 
+            this.fPublicAgesCtrl.BackColor = System.Drawing.SystemColors.Control;
             this.fPublicAgesCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fPublicAgesCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fPublicAgesCtrl.Location = new System.Drawing.Point(0, 0);
             this.fPublicAgesCtrl.Name = "fPublicAgesCtrl";
-            this.fPublicAgesCtrl.Parent = null;
             this.fPublicAgesCtrl.Size = new System.Drawing.Size(440, 462);
             this.fPublicAgesCtrl.TabIndex = 0;
             // 
@@ -305,7 +307,7 @@
             this.fRecentsTab.Controls.Add(this.fRecentsCtrl);
             this.fRecentsTab.Location = new System.Drawing.Point(4, 22);
             this.fRecentsTab.Name = "fRecentsTab";
-            this.fRecentsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.fRecentsTab.Padding = new System.Windows.Forms.Padding(0);
             this.fRecentsTab.Size = new System.Drawing.Size(446, 468);
             this.fRecentsTab.TabIndex = 2;
             this.fRecentsTab.Tag = "recents";
@@ -314,8 +316,9 @@
             // 
             // fRecentsCtrl
             // 
+            this.fRecentsCtrl.BackColor = System.Drawing.SystemColors.Control;
             this.fRecentsCtrl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.fRecentsCtrl.Location = new System.Drawing.Point(3, 3);
+            this.fRecentsCtrl.Location = new System.Drawing.Point(0, 0);
             this.fRecentsCtrl.Name = "fRecentsCtrl";
             this.fRecentsCtrl.Size = new System.Drawing.Size(440, 462);
             this.fRecentsCtrl.TabIndex = 0;

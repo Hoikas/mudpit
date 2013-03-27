@@ -25,13 +25,13 @@
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             this.fDataGridView = new System.Windows.Forms.DataGridView();
-            this.fContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.fCopyMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fRemoveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fOnline = new System.Windows.Forms.DataGridViewImageColumn();
             this.fKI = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fPlayerName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fCurrentAge = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.fContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.fCopyMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fRemoveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.fDataGridView)).BeginInit();
             this.fContextMenu.SuspendLayout();
             this.SuspendLayout();
@@ -41,7 +41,7 @@
             this.fDataGridView.AllowUserToAddRows = false;
             this.fDataGridView.AllowUserToDeleteRows = false;
             this.fDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.fDataGridView.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.fDataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.fDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.fDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.fDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -63,32 +63,6 @@
             this.fDataGridView.Size = new System.Drawing.Size(471, 332);
             this.fDataGridView.TabIndex = 0;
             this.fDataGridView.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.ICellMouseClick);
-            // 
-            // fContextMenu
-            // 
-            this.fContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fCopyMenuItem,
-            this.fRemoveMenuItem});
-            this.fContextMenu.Name = "fContextMenu";
-            this.fContextMenu.Size = new System.Drawing.Size(111, 48);
-            // 
-            // fCopyMenuItem
-            // 
-            this.fCopyMenuItem.Name = "fCopyMenuItem";
-            this.fCopyMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.fCopyMenuItem.ShowShortcutKeys = false;
-            this.fCopyMenuItem.Size = new System.Drawing.Size(110, 22);
-            this.fCopyMenuItem.Text = "Copy";
-            this.fCopyMenuItem.Click += new System.EventHandler(this.ICopy);
-            // 
-            // fRemoveMenuItem
-            // 
-            this.fRemoveMenuItem.Name = "fRemoveMenuItem";
-            this.fRemoveMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.R)));
-            this.fRemoveMenuItem.ShowShortcutKeys = false;
-            this.fRemoveMenuItem.Size = new System.Drawing.Size(110, 22);
-            this.fRemoveMenuItem.Text = "&Remove";
-            this.fRemoveMenuItem.Click += new System.EventHandler(this.IRemovePlayer);
             // 
             // fOnline
             // 
@@ -120,6 +94,32 @@
             this.fCurrentAge.HeaderText = "Current Age";
             this.fCurrentAge.Name = "fCurrentAge";
             this.fCurrentAge.ReadOnly = true;
+            // 
+            // fContextMenu
+            // 
+            this.fContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fCopyMenuItem,
+            this.fRemoveMenuItem});
+            this.fContextMenu.Name = "fContextMenu";
+            this.fContextMenu.Size = new System.Drawing.Size(111, 48);
+            // 
+            // fCopyMenuItem
+            // 
+            this.fCopyMenuItem.Name = "fCopyMenuItem";
+            this.fCopyMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
+            this.fCopyMenuItem.ShowShortcutKeys = false;
+            this.fCopyMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fCopyMenuItem.Text = "Copy";
+            this.fCopyMenuItem.Click += new System.EventHandler(this.ICopy);
+            // 
+            // fRemoveMenuItem
+            // 
+            this.fRemoveMenuItem.Name = "fRemoveMenuItem";
+            this.fRemoveMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.R)));
+            this.fRemoveMenuItem.ShowShortcutKeys = false;
+            this.fRemoveMenuItem.Size = new System.Drawing.Size(110, 22);
+            this.fRemoveMenuItem.Text = "&Remove";
+            this.fRemoveMenuItem.Click += new System.EventHandler(this.IRemovePlayer);
             // 
             // OnlinePlayers
             // 

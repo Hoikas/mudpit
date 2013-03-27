@@ -25,11 +25,11 @@
         private void InitializeComponent() {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PublicAgesControl));
             this.fDataGridView = new System.Windows.Forms.DataGridView();
-            this.fRefreshImage = new System.Windows.Forms.PictureBox();
-            this.fRefreshLink = new System.Windows.Forms.LinkLabel();
             this.fAgeInstance = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fAgeDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.fCurrPopulation = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.fRefreshImage = new System.Windows.Forms.PictureBox();
+            this.fRefreshLink = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.fDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.fRefreshImage)).BeginInit();
             this.SuspendLayout();
@@ -38,11 +38,11 @@
             // 
             this.fDataGridView.AllowUserToAddRows = false;
             this.fDataGridView.AllowUserToDeleteRows = false;
-            this.fDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.fDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.fDataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.fDataGridView.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.fDataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.fDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.fDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.fDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -59,6 +59,27 @@
             this.fDataGridView.ShowEditingIcon = false;
             this.fDataGridView.Size = new System.Drawing.Size(307, 209);
             this.fDataGridView.TabIndex = 0;
+            // 
+            // fAgeInstance
+            // 
+            this.fAgeInstance.HeaderText = "Age Name";
+            this.fAgeInstance.Name = "fAgeInstance";
+            this.fAgeInstance.ReadOnly = true;
+            this.fAgeInstance.Width = 82;
+            // 
+            // fAgeDescription
+            // 
+            this.fAgeDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.fAgeDescription.HeaderText = "Description";
+            this.fAgeDescription.Name = "fAgeDescription";
+            this.fAgeDescription.ReadOnly = true;
+            // 
+            // fCurrPopulation
+            // 
+            this.fCurrPopulation.HeaderText = "Population";
+            this.fCurrPopulation.Name = "fCurrPopulation";
+            this.fCurrPopulation.ReadOnly = true;
+            this.fCurrPopulation.Width = 82;
             // 
             // fRefreshImage
             // 
@@ -82,27 +103,6 @@
             this.fRefreshLink.TabStop = true;
             this.fRefreshLink.Text = "Refresh List";
             this.fRefreshLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.IRefreshLinkClicked);
-            // 
-            // fAgeInstance
-            // 
-            this.fAgeInstance.HeaderText = "Age Name";
-            this.fAgeInstance.Name = "fAgeInstance";
-            this.fAgeInstance.ReadOnly = true;
-            this.fAgeInstance.Width = 82;
-            // 
-            // fAgeDescription
-            // 
-            this.fAgeDescription.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.fAgeDescription.HeaderText = "Description";
-            this.fAgeDescription.Name = "fAgeDescription";
-            this.fAgeDescription.ReadOnly = true;
-            // 
-            // fCurrPopulation
-            // 
-            this.fCurrPopulation.HeaderText = "Population";
-            this.fCurrPopulation.Name = "fCurrPopulation";
-            this.fCurrPopulation.ReadOnly = true;
-            this.fCurrPopulation.Width = 82;
             // 
             // PublicAgesControl
             // 
