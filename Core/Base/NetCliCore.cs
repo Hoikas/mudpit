@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Linq;
 using System.Text;
 
@@ -122,6 +123,17 @@ namespace MUd {
             s.WriteInt(fLanguage);
             s.WriteUInt(fPopulation);
             s.WriteUInt(fCurrPopulation);
+        }
+    }
+
+    public class Helpers {
+
+        static RNGCryptoServiceProvider sRNG = new RNGCryptoServiceProvider();
+
+        public static byte[] StrongRandom(int size) {
+            byte[] buf = new byte[size];
+            sRNG.GetNonZeroBytes(buf);
+            return buf;
         }
     }
 }

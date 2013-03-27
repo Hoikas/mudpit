@@ -143,32 +143,6 @@ namespace OpenSSL {
         }
 
         /// <summary>
-        /// Replaces the content of the BigNum with a random BigNum
-        /// </summary>
-        /// <param name="bn">BigNum to replace</param>
-        /// <param name="bits">How many bits the generated random number shoud have</param>
-        public static void Random(BigNum bn, int bits) {
-            if (bn.fDisposed)
-                throw new ObjectDisposedException("BigNum");
-
-            RNG.Seed();
-            OpenSSL.BN_rand(bn.fBigNum, bits, 1, 1);
-        }
-
-
-        /// <summary>
-        /// Generates a random BigNum
-        /// </summary>
-        /// <param name="bits">How many bits the generated random number shoud have</param>
-        /// <returns>Generated random number</returns>
-        public static BigNum Random(int bits) {
-            RNG.Seed();
-            BigNum rand = new BigNum();
-            OpenSSL.BN_rand(rand.fBigNum, bits, 1, 1);
-            return rand;
-        }
-
-        /// <summary>
         /// Returns the BigNum as a buffer
         /// </summary>
         /// <returns>Content of BigNum as byte array</returns>

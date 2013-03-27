@@ -152,7 +152,7 @@ namespace MUd {
         }
 
         private bool ISetupKeys(int g) {
-            BigNum b = BigNum.Random(512);
+            BigNum b = new BigNum(Helpers.StrongRandom(64));
             BigNum N = new BigNum(fN);
             BigNum X = new BigNum(fX);
 

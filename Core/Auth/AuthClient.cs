@@ -245,7 +245,7 @@ namespace MUd {
         }
 
         public uint Login(string acctName, string acctPW, uint srvChal) {
-            int clientChal = BitConverter.ToInt32(RNG.Random(4), 0);
+            int clientChal = BitConverter.ToInt32(Helpers.StrongRandom(4), 0);
 
             //Note: Usernames without "@" are SHA-1
             //Otherwise, they are SHA-0 with the strcopy bug
