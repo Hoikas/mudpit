@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("WhoM")]
-[assembly: AssemblyDescription("MUd: Myst Uru Dæmon\r\nA tool that interfaces with your KI by Mr. Adam Johnson.\r\n\r\nFor more information on the project, please visit http://mud.hoikas.com")]
+[assembly: AssemblyDescription("MUd: Myst Uru Dæmon\r\nA tool that interfaces with your KI by Adam Johnson.\r\n\r\nFor more information on the project, please visit http://mud.hoikas.com")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MUd Development Team")]
 [assembly: AssemblyProduct("MUd: Who's Online")]
-[assembly: AssemblyCopyright("Copyright © MUd Team 2010")]
+[assembly: AssemblyCopyright("Copyright © MUd Team 2010-2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

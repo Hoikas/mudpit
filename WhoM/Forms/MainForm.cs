@@ -51,15 +51,6 @@ namespace MUd {
 #if !DEBUG
             AuthCli.ExceptionHandler +=new ExceptionArgs(IOnAuthException);
 #endif
-
-            //Are we running Mono?
-            switch (Environment.OSVersion.Platform) {
-                case PlatformID.MacOSX:
-                case PlatformID.Unix:
-                    if (!OpenSSL.OpenSSL.IsDllPresent)
-                        MessageBox.Show("OpenSSL is not installed!\r\nPlease run \"apt-get install libssl-dev\" or compile libcrypto", "OpenSSL Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    break;
-            }
         }
 
         #region Auth Client Helpers
@@ -197,129 +188,10 @@ namespace MUd {
         }
         #endregion
 
-        #region Game Chat Client Methods
-        private void IAgeJoined(ENetError result) {
-            //Very ugly hacks...
-            if (result != ENetError.kNetSuccess) {
-                LogError(String.Format("JoinAge failed! [REASON: {0}]", result.ToString().Substring(4)));
-                return;
-            }
-
-            //Create the plKey for the plNetClientMgr singleton
-            Uoid client_mgr = new Uoid();
-            client_mgr.fClassType = CreatableID.NetClientMgr;
-            client_mgr.fLocation = new Location(0, 0, (Location.LocFlags)0);
-            client_mgr.fObjectID = 0;
-            client_mgr.fObjectName = "kNetClientMgr_KEY";
-
-            //Create a plKey representing a DefaultMan avatar
-            //Note: Our gender doesn't matter because no one will
-            //      see this avatar, unless they are stalking you :)
-            Uoid player = new Uoid();
-            player.fClassType = CreatableID.SceneObject;
-            player.fCloneID = 2; //Don't ask...
-            player.fClonePlayerID = fActivePlayer;
-            player.fLocation = new Location(1, -6, MUd.Location.LocFlags.kReserved);
-            player.fObjectID = 78; //Hardcoded value from the PRP. Hope it doesn't change!
-            player.fObjectName = "Male"; //DEFAULTMAN! :D
-
-            //Create the plKey for the plAvatarMgr singleton
-            Uoid av_mgr = new Uoid();
-            av_mgr.fClassType = CreatableID.AvatarMgr;
-            av_mgr.fLocation = new Location(0, 0, (Location.LocFlags)0);
-            av_mgr.fObjectID = 0;
-            av_mgr.fObjectName = "kAvatarMgr_KEY";
-
-            //Create the plLoadAvatarMsg to be embedded inside the plNetMsgLoadClone
-            LoadAvatarMsg av_msg = new LoadAvatarMsg();
-            av_msg.fBCastFlags = Message.BCastFlags.kLocalPropagate | Message.BCastFlags.kNetPropagate;
-            av_msg.fCloneKey = player; //We want to clone this SceneObject as our avatar
-            av_msg.fIsLoading = true;
-            av_msg.fIsPlayer = true;
-            av_msg.fOriginatingPlayerID = fActivePlayer;
-            av_msg.fReceivers.Add(av_mgr); //We want to send this to the plAvatarMgr on the client
-            av_msg.fRequestorKey = av_mgr; //Pretend that we are a remote plAvatarMgr *wink*
-            av_msg.fUserData = 0;
-            av_msg.fValidMsg = true;
-
-            //Create the plNetMsgLoadClone
-            NetMsgLoadClone clone = new NetMsgLoadClone();
-            clone.AcctUUID = fAcctUuid;
-            clone.GameMsg = av_msg;
-            clone.fIsInitialState = false;
-            clone.fIsLoading = true;
-            clone.fIsPlayer = true;
-            clone.fPlayerKey = player;
-
-            //Set some flags
-            clone.ReliableSend = true;                         //0x40000
-            clone.PlayerID = fActivePlayer;                    //0x01000
-            clone.TimeSent = new UnifiedTime(DateTime.UtcNow); //0x00001
-
-            //Finally, send the biggie...
-            GameCli.PropagateBuffer(clone.ClassIndex, clone.ToArray());
-
-            //Hack to display avatar?
-            NetMsgMembersListReq list_req = new NetMsgMembersListReq();
-            list_req.ReliableSend = true;                         //0x40000
-            list_req.SystemMsg = true;                            //0x20000
-            list_req.PlayerID = fActivePlayer;                    //0x01000
-            list_req.TimeSent = new UnifiedTime(DateTime.UtcNow); //0x00001
-            GameCli.PropagateBuffer(list_req.ClassIndex, list_req.ToArray());
-        }
-
-        private void IConnectToAgeSrv(ENetError result, Guid instance, uint mcpid, uint vaultID, IPAddress gameSrv) {
-            //Set the server information
-            GameCli.Host = gameSrv.ToString();
-            GameCli.Port = 14617;
-
-            //Set stuff that makes the server happy
-            //Happy servers are happy!
-            GameCli.AccountUUID = fAcctUuid;
-            GameCli.InstanceUUID = instance;
-            GameCli.McpID = mcpid;
-            GameCli.PlayerID = fActivePlayer;
-
-            //Finally Connect... :D
-            GameCli.Connect();
-            GameCli.Ping((int)DateTime.UtcNow.Ticks); //Debug purposes... Sometimes the GameSrv likes to be a foo'
-
-            //Join our age
-            uint trans = GameCli.JoinAge();
-            RegisterGameCB(trans, new Action<ENetError>(IAgeJoined));
-        }
-
-        private void IFetchAgeFromVault(VaultNode node) {
-            VaultAgeInfoNode info = new VaultAgeInfoNode(node);
-            uint req = AuthCli.RequestAge(info.Filename, info.InstanceUUID);
-            RegisterAuthCB(req, new Action<ENetError, Guid, uint, uint, IPAddress>(IConnectToAgeSrv));
-        }
-
-        private void IOnlineStatusChanged(ENetError result, bool online) {
-            if (online)
-                FetchNode(fBaseNodes[EStandardNode.kAgeInfoNode], new Action<VaultNode>(IFetchAgeFromVault));
-            else
-                GameCli.Disconnect();
-        }
-
-        private void IToggleMyOnlineStatus() {
-            FetchNode(fBaseNodes[EStandardNode.kPlayerInfoNode], new Action<VaultNode>(IToggleMyOnlineStatus));
-        }
-
-        private void IToggleMyOnlineStatus(VaultNode n) {
-            VaultPlayerInfoNode info = new VaultPlayerInfoNode(n);
-            info.Online = !info.Online;
-            uint trans = AuthCli.SaveVaultNode(Guid.NewGuid(), info.ID, info.BaseNode.ToArray());
-            RegisterAuthCB(trans, new Action<ENetError, bool>(IOnlineStatusChanged), new object[] { info.Online });
-        }
-        #endregion
-
         #region Menu Events
         private void IAboutMe(object sender, EventArgs e) {
             AboutBox abox = new AboutBox();
             abox.Show(this);
-
-            IToggleMyOnlineStatus();
         }
 
         private void IConnect(object sender, EventArgs e) {
