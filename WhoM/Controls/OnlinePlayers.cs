@@ -102,6 +102,8 @@ namespace MUd {
                 return "Ahnonay Cathedral";
             else if (info.AgeInstanceName == "AvatarCustomization")
                 return "Closet";
+            else if (info.AgeInstanceName == "Bevin")
+                return "Neighborhood";
             else if (info.AgeInstanceName == "city")
                 return "Ae'gura";
             else if (info.AgeInstanceName == "Descent")
@@ -126,6 +128,8 @@ namespace MUd {
                 return "Messengers' Pub";
             else if (info.AgeInstanceName == "GuildPub-Writers")
                 return "Writers' Pub";
+            else if (info.AgeInstanceName == "Hood")
+                return "Neighborhood";
             else if (info.AgeInstanceName == "Kveer")
                 return "K'veer";
             else if (info.AgeInstanceName == "PelletBahroCave")

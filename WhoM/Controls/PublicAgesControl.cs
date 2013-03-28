@@ -144,6 +144,8 @@ namespace MUd {
                 return "Guild Pub";
             } else if (nai.fFilename == "Kveer") {
                 return "K'veer";
+            } else if (nai.fFilename == "Neighborhood") {
+                return "Neighborhood";
             } else {
                 return nai.fInstanceName;
             }
